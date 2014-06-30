@@ -1,0 +1,43 @@
+<template name="Static">
+  {{> DynamicTemplate template="NoData"}}
+</template>
+
+<template name="StaticData">
+  {{> DynamicTemplate template="WithData" data=getData}}
+</template>
+
+<template name="Dynamic">
+  {{> DynamicTemplate template=getTemplate}}
+</template>
+
+<template name="DynamicData">
+  {{> DynamicTemplate template="WithData" data=getData}}
+</template>
+
+<template name="DynamicParentData">
+  {{#with getData}}
+    {{> DynamicTemplate template="WithData"}}
+  {{/with}}
+</template>
+
+<template name="DynamicWithBlock">
+  {{#DynamicTemplate template=getTemplate}}
+    default
+  {{/DynamicTemplate}}
+</template>
+
+<template name="NoData">
+NoData
+</template>
+
+<template name="WithData">
+WithData-{{this}} 
+</template>
+
+<template name="One">
+One
+</template>
+
+<template name="Two">
+Two
+</template>

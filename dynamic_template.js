@@ -104,10 +104,17 @@ DynamicTemplate.prototype.create = function (options) {
           break;
       }
 
+
       return result;
     },
 
     render: function () {
+
+      // we assign the component at render time so it's available in the data
+      // function.
+      self.component = this;
+
+      // so we can get back to the dynamic template instance.
       this.__dynamicTemplate__ = self;
 
       // Set up a reactive computation for template changes.
@@ -152,7 +159,12 @@ DynamicTemplate.prototype._render = function (options) {
     throw new Error("component is already rendered");
 
   var component = this.create();
-  this.component = UI.render(component, options.parentComponent, options);
+
+  UI.render(component, options.parentComponent, options);
+
+  if (!this.component)
+    throw new Error("component should be assigned by now");
+
   return this.component;
 };
 

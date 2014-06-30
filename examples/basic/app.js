@@ -8,7 +8,7 @@ if (Meteor.isClient) {
   Template.WithParentDataContext.helpers({
     getData: function () {
       return {
-        title: Session.get('parentTitle')
+        title: Session.get('parentData')
       };
     }
   });
