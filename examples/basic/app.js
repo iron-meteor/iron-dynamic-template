@@ -1,0 +1,29 @@
+if (Meteor.isClient) {
+  Template.WithDynamicTemplate.helpers({
+    getTemplate: function () {
+      return Session.get('template');
+    }
+  });
+
+  Template.WithParentDataContext.helpers({
+    getData: function () {
+      return {
+        title: Session.get('parentTitle')
+      };
+    }
+  });
+
+  Template.InlineDataContext.helpers({
+    getData: function () {
+      return {
+        title: Session.get('inlineTitle')
+      };
+    }
+  });
+
+  Template.InlineBlock.helpers({
+    getTemplate: function () {
+      return Session.get('template');
+    }
+  });
+}

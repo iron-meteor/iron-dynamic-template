@@ -1,0 +1,32 @@
+<head>
+  <title>basic</title>
+</head>
+
+<body>
+  {{> InlineBlock}}
+</body>
+
+<template name="WithDynamicTemplate">
+  {{> DynamicTemplate template=getTemplate}}
+</template>
+
+<template name="InlineDataContext">
+  {{> DynamicTemplate template="MyLayout" data=getData}}
+</template>
+
+<template name="WithParentDataContext">
+  {{#with getData}}
+    {{> DynamicTemplate template="MyLayout"}}
+  {{/with}}
+</template>
+
+<template name="InlineBlock">
+  {{#DynamicTemplate template=getTemplate}}
+    Some default text while waiting for another template
+  {{/DynamicTemplate}}
+</template>
+
+<template name="MyLayout">
+  <h1>Layout with Title: {{title}}</h1>
+</template>
+
