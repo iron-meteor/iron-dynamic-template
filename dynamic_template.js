@@ -11,7 +11,7 @@ findComponentWithProp = function (id, comp) {
   return null;
 };
 
-var DynamicTemplate = function (options) {
+DynamicTemplate = function (options) {
   this.options = options = options || {};
   this._template = options.template;
   this._content = options.content;
