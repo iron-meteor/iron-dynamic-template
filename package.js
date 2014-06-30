@@ -1,5 +1,8 @@
 Package.describe({
-  summary: 'Dynamic templates'
+  name: 'iron-dynamic-template',
+  summary: 'Dynamic templates and data contexts.',
+  version: "0.1.0",
+  githubUrl: "https://github.com/eventedmind/iron-dynamic-template"
 });
 
 Package.on_use(function (api) {
@@ -14,6 +17,11 @@ Package.on_use(function (api) {
 });
 
 Package.on_test(function (api) {
+  api.use('iron-dynamic-template');
+  api.use('templating');
   api.use('tinytest');
   api.use('test-helpers');
+
+  api.add_files('dynamic_template_test.html', 'client');
+  api.add_files('dynamic_template_test.js', 'client');
 });
