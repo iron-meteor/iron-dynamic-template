@@ -98,7 +98,9 @@ DynamicTemplate.prototype.create = function (options) {
         // property defined. Might create unnecessary dependencies.
         result = (typeof compWithData.data === 'function') ? compWithData.data() : compWithData.data;
 
-        if (_.has(result, 'template') || _.has(result, 'data'))
+        // result could be undefined or our immediate data context for the key
+        // value args to {{> DynamicTemplate template=".." data=".."
+        if (!result || _.has(result, 'template') || _.has(result, 'data'))
           compWithData = findComponentWithProp('data', compWithData.parent);
         else
           break;
