@@ -3,6 +3,7 @@ Iron.DynamicTemplate
 Dynamic templates and data contexts for Meteor.
 
 ## Install
+***Note: Not on atmosphere yet. For now, just use a github clone.***
 ```bash
 > mrt add iron-dynamic-template
 ```
