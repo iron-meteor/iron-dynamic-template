@@ -11,6 +11,52 @@ findComponentWithProp = function (id, comp) {
   return null;
 };
 
+/**
+ * Get inclusion arguments if any.
+ *
+ * Uses the __isTemplateWith property set when a parent component is used
+ * specificially for a data context with inclusion args.
+ *
+ * Inclusion arguments are arguments provided in a template like this:
+ * {{> yield "inclusionArg"}}
+ * or
+ * {{> yield region="inclusionArgValue"}}
+ */
+getInclusionArguments = function (cmp) {
+  var parent = cmp && cmp.parent;
+
+  if (!parent)
+    return null;
+
+  if (parent.__isTemplateWith && parent.data)
+    return (typeof parent.data === 'function') ? parent.data() : parent.data;
+
+  return null;
+};
+
+/**
+ * Get the first parent data context that does not include inclusion arguments
+ * (see above function).
+ */
+getParentDataContext = function (cmp) {
+  // start off with the parent.
+  cmp = cmp.parent;
+
+  while (cmp) {
+    if (!cmp.__isTemplateWith && cmp.data)
+      return (typeof cmp.data === 'function') ? cmp.data() : cmp.data;
+    else
+      cmp = cmp.parent;
+  }
+
+  return null;
+};
+
+/**
+ * Render a component to the page whose template and data context can change
+ * dynaimcally.
+ *
+ */
 DynamicTemplate = function (options) {
   this.options = options = options || {};
   this._template = options.template;
@@ -79,35 +125,11 @@ DynamicTemplate.prototype.create = function (options) {
       var component = self.component;
 
       if (typeof result !== 'undefined')
+        // looks like data was set directly on this dynamic template
         return result;
-
-      // Otherwise we're going to use a guess to find the next parent data
-      // context. Which is the actual parent data context is ambiguous. This is
-      // because if we pass key value args to {{> DynamicLayout key=value}} this
-      // compiles into a parent and child component. So we don't know if the
-      // actual data context is 1 or 2 levels above. So we'll test each data
-      // context we find for the absense of a template or data property.
-
-      var compWithData = findComponentWithProp('data', component && component.parent);
-
-      while (compWithData) {
-        // XXX This isn't currently run in a Deps.nonreactive because we don't want
-        // to break reactivity. But this might have unintended consequences
-        // since we call the data function all the way up the chain until we
-        // find a component data that does not have a "template" or "data"
-        // property defined. Might create unnecessary dependencies.
-        result = (typeof compWithData.data === 'function') ? compWithData.data() : compWithData.data;
-
-        // result could be undefined or our immediate data context for the key
-        // value args to {{> DynamicTemplate template=".." data=".."
-        if (!result || _.has(result, 'template') || _.has(result, 'data'))
-          compWithData = findComponentWithProp('data', compWithData.parent);
-        else
-          break;
-      }
-
-
-      return result;
+      else
+        // return the first parent data context that is not inclusion arguments
+        return getParentDataContext(component);
     },
 
     render: function () {
