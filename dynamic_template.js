@@ -65,6 +65,7 @@ DynamicTemplate = function (options) {
   this._data = options.data;
   this._templateDep = new Deps.Dependency;
   this._dataDep = new Deps.Dependency;
+  this._hooks = {};
   this.kind = options.kind || 'DynamicTemplate';
 };
 
@@ -165,6 +166,9 @@ DynamicTemplate.prototype.create = function (options) {
       return Spacebars.include(function () {
         var template = self.template();
 
+        // call the onRender callbacks with fn (dynamicTemplate, component)
+        self._runHooks('onRender', self, self.component);
+
         // is it a template name like "MyTemplate"?
         if (typeof template === 'string') {
           var tmpl = Template[template];
@@ -193,6 +197,15 @@ DynamicTemplate.prototype.create = function (options) {
   });
 };
 
+/**
+ * Register a callback to be called at component render time.
+ */
+DynamicTemplate.prototype.onRender = function (callback) {
+  var hooks = this._hooks['onRender'] = this._hooks['onRender'] || [];
+  hooks.push(callback);
+  return this;
+};
+
 /*
  * Create a new component and call UI.render.
  */
@@ -210,6 +223,22 @@ DynamicTemplate.prototype._render = function (options) {
     throw new Error("component should be assigned by now");
 
   return this.component;
+};
+
+/**
+ * Run hook functions for a given hook name.
+ *
+ * hooks['onRender'] = [fn1, fn2, fn3]
+ */
+DynamicTemplate.prototype._runHooks = function (name /*, args */) {
+  var args = _.toArray(arguments).slice(1);
+  var hooks = this._hooks[name] || [];
+  var hook;
+
+  for (var i = 0; i < hooks.length; i++) {
+    hook = hooks[i];
+    hook.apply(this, args);
+  }
 };
 
 /**

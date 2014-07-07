@@ -272,3 +272,31 @@ Tinytest.add('DynamicTemplate - default template', function (test) {
     test.equal(el.innerHTML.compact(), 'One', 'fallback to default');
   });
 });
+
+Tinytest.add('DynamicTemplate - onRender callbacks', function (test) {
+
+  var tmpl = new Iron.DynamicTemplate({defaultTemplate: 'One'});
+  var calls = [];
+
+  tmpl.onRender(function (dynamicTemplate, component) {
+    calls.push({
+      dynamicTemplate: dynamicTemplate,
+      component: component,
+      thisArg: this
+    });
+  });
+
+  // calling create() on the dynamic template creates and returns a new
+  // UI.Component to be rendered.
+  withRenderedTemplate(tmpl.create(), function (cmp, el) {
+    test.equal(calls.length, 1);
+
+    tmpl.template('Two');
+    Deps.flush();
+    test.equal(calls.length, 2);
+
+    var call = calls[1];
+    test.instanceOf(call.dynamicTemplate, Iron.DynamicTemplate);
+    test.instanceOf(call.component, Object);
+  });
+});
