@@ -204,7 +204,7 @@ DynamicTemplate.prototype.insert = function (options) {
   if ($el.length === 0)
     throw new Error("No element to insert layout into. Is your element defined? Try a Meteor.startup callback.");
 
-  UI.insert(this._render(), $el[0], options.nextNode);
+  UI.insert(this._render(options), $el[0], options.nextNode);
 };
 
 /**
