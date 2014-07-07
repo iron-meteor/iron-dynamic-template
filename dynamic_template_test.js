@@ -246,3 +246,29 @@ Tinytest.add('DynamicTemplate - From JavaScript', function (test) {
     reactiveData.clear();
   });
 });
+
+Tinytest.add('DynamicTemplate - default template', function (test) {
+  var tmpl = new Iron.DynamicTemplate({defaultTemplate: 'One'});
+
+  // calling create() on the dynamic template creates and returns a new
+  // UI.Component to be rendered.
+  withRenderedTemplate(tmpl.create(), function (cmp, el) {
+    test.equal(el.innerHTML.compact(), 'One', 'default template not set from options');
+
+    tmpl.template('Two');
+    Deps.flush();
+    test.equal(el.innerHTML.compact(), 'Two', 'default template not replaced');
+
+    tmpl.template(false);
+    Deps.flush();
+    test.equal(el.innerHTML.compact(), 'One', 'fallback to default');
+
+    tmpl.template(null);
+    Deps.flush();
+    test.equal(el.innerHTML.compact(), 'One', 'fallback to default');
+
+    tmpl.template(undefined);
+    Deps.flush();
+    test.equal(el.innerHTML.compact(), 'One', 'fallback to default');
+  });
+});

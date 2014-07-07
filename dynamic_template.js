@@ -60,6 +60,7 @@ getParentDataContext = function (cmp) {
 DynamicTemplate = function (options) {
   this.options = options = options || {};
   this._template = options.template;
+  this._defaultTemplate = options.defaultTemplate;
   this._content = options.content;
   this._data = options.data;
   this._templateDep = new Deps.Dependency;
@@ -78,7 +79,26 @@ DynamicTemplate.prototype.template = function (value) {
   }
 
   this._templateDep.depend();
-  return typeof this._template === 'function' ? this._template() : this._template;
+
+  // do we have a template?
+  if (this._template)
+    return (typeof this._template === 'function') ? this._template() : this._template;
+
+  // no template? ok let's see if we have a default one set
+  if (this._defaultTemplate)
+    return (typeof this._defaultTemplate === 'function') ? this._defaultTemplate() : this._defaultTemplate;
+};
+
+/**
+ * Get or set the default template.
+ *
+ * This function does not change any dependencies.
+ */
+DynamicTemplate.prototype.defaultTemplate = function (value) {
+  if (arguments.length === 1)
+    this._defaultTemplate = value;
+  else
+    return this._defaultTemplate;
 };
 
 
