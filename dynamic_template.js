@@ -282,6 +282,5 @@ UI.registerHelper('DynamicTemplate', UI.Component.extend({
 /**
  * Namespacing
  */
-Iron = Iron || {};
 Iron.DynamicTemplate = DynamicTemplate;
 

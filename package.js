@@ -12,8 +12,9 @@ Package.on_use(function (api) {
   api.use('deps');
   api.use('templating');
 
+  api.use('iron-core');
+
   api.add_files('dynamic_template.js', 'client');
-  api.export('Iron', 'client');
 });
 
 Package.on_test(function (api) {
