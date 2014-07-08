@@ -13,6 +13,7 @@ Package.on_use(function (api) {
   api.use('templating');
 
   api.use('iron-core');
+  api.imply('iron-core');
 
   api.add_files('dynamic_template.js', 'client');
 });
