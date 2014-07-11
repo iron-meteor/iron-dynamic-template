@@ -3,11 +3,18 @@
 </head>
 
 <body>
-  <div id="container">
-    
-  </div>
+  {{> WithHelper}}
 </body>
 
+<template name="container">
+  <div id="container">
+  </div>
+</template>
+
 <template name="One">
-  Hello {{title}}
+  Hello One, {{title}}
+</template>
+
+<template name="Two">
+  Hello Two, {{title}}
 </template>

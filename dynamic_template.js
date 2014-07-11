@@ -38,15 +38,15 @@ getInclusionArguments = function (cmp) {
  * Get the first parent data context that does not include inclusion arguments
  * (see above function).
  */
-getParentDataContext = function (cmp) {
+getParentDataContext = function (view) {
   // start off with the parent.
-  cmp = cmp.parent;
+  view = view.parentView;
 
-  while (cmp) {
-    if (!cmp.__isTemplateWith && cmp.data)
-      return (typeof cmp.data === 'function') ? cmp.data() : cmp.data;
+  while (view) {
+    if (view.kind === 'with' && !view.__isTemplateWith)
+      return view.dataVar.get();
     else
-      cmp = cmp.parent;
+      view = view.parentView;
   }
 
   return null;
@@ -130,71 +130,91 @@ DynamicTemplate.prototype.data = function (value) {
 
 /**
  * Return a UI.Component.
+ * XXX add back hooks
  */
 DynamicTemplate.prototype.create = function (options) {
   var self = this;
 
-  return UI.Component.extend({
-    kind: self.kind,
+  if (this.view)
+    throw new Error("view is already created");
 
-    /**
-     * Return either the data which is set on the dynamic template directly, or the next
-     * ancestor's data.
-     */
-    data: function () {
-      var result = self.data();
-      var component = self.component;
+  var view = self.view = Blaze.View(self.kind, function () {
+    var template = self.template();
 
-      if (typeof result !== 'undefined')
-        // looks like data was set directly on this dynamic template
-        return result;
-      else
-        // return the first parent data context that is not inclusion arguments
-        return getParentDataContext(component);
-    },
+    // is it a template name like "MyTemplate"?
+    if (typeof template === 'string') {
+      var tmpl = Template[template];
 
-    render: function () {
+      if (!tmpl)
+        throw new Error("Couldn't find a template named '" + template + "'. Are you sure you defined it?");
 
-      // we assign the component at render time so it's available in the data
-      // function.
-      self.component = this;
-
-      // so we can get back to the dynamic template instance.
-      this.__dynamicTemplate__ = self;
-
-      // Set up a reactive computation for template changes.
-      return Spacebars.include(function () {
-        var template = self.template();
-
-        // call the onRender callbacks with fn (dynamicTemplate, component)
-        self._runHooks('onRender', self, self.component);
-
-        // is it a template name like "MyTemplate"?
-        if (typeof template === 'string') {
-          var tmpl = Template[template];
-
-          if (!tmpl)
-            throw new Error("Couldn't find a template named '" + template + "'. Are you sure you defined it?");
-
-          return tmpl;
-        }
-
-        // or maybe a component?
-        if (typeOf(template) === '[object Object]')
-          return template;
-
-        // or maybe its block content like 
-        // {{#DynamicTemplate}}
-        //  Some block
-        // {{/DynamicTemplate}}
-        if (typeof self._content !== 'undefined')
-          return self._content;
-
-        // guess we don't have a template assigned yet
-        return null;
-      });
+      return tmpl;
     }
+
+    // or maybe a component?
+    if (typeOf(template) === '[object Object]')
+      return template;
+
+    // or maybe its block content like 
+    // {{#DynamicTemplate}}
+    //  Some block
+    // {{/DynamicTemplate}}
+    if (typeof self._content !== 'undefined')
+      return self._content;
+
+    // guess we don't have a template assigned yet
+    return null;
   });
+
+  view.__dynamicTemplate__ = self;
+
+  /**
+   * Return either the data which is set on the dynamic template directly, or the next
+   * ancestor's data.
+   */
+  var dataView = Blaze.With(function () {
+    var result = self.data();
+
+    if (typeof result !== 'undefined')
+      // looks like data was set directly on this dynamic template
+      return result;
+    else
+      // return the first parent data context that is not inclusion arguments
+      return getParentDataContext(dataView);
+  }, function () {
+    return view;
+  });
+
+  return dataView;
+};
+
+/*
+ * Create a new component and call UI.render.
+ */
+DynamicTemplate.prototype.render = function (options) {
+  options = options || {};
+
+  if (this.range)
+    throw new Error("view is already rendered");
+
+  var range = this.range = Blaze.render(this.create(options), options.parentView);
+  return range;
+};
+
+/**
+ * Insert the Layout component into the dom.
+ */
+DynamicTemplate.prototype.insert = function (options) {
+  options = options || {};
+
+  var el = options.el || document.body;
+  var $el = $(el);
+
+  if ($el.length === 0)
+    throw new Error("No element to insert layout into. Is your element defined? Try a Meteor.startup callback.");
+
+  var range = this.render(options);
+  range.attach($el[0], options.nextNode);
 };
 
 /**
@@ -206,24 +226,6 @@ DynamicTemplate.prototype.onRender = function (callback) {
   return this;
 };
 
-/*
- * Create a new component and call UI.render.
- */
-DynamicTemplate.prototype._render = function (options) {
-  options = options || {};
-
-  if (this.component)
-    throw new Error("component is already rendered");
-
-  var component = this.create();
-
-  UI.render(component, options.parentComponent, options);
-
-  if (!this.component)
-    throw new Error("component should be assigned by now");
-
-  return this.component;
-};
 
 /**
  * Run hook functions for a given hook name.
@@ -242,42 +244,32 @@ DynamicTemplate.prototype._runHooks = function (name /*, args */) {
 };
 
 /**
- * Insert the Layout component into the dom.
- */
-DynamicTemplate.prototype.insert = function (options) {
-  options = options || {};
-
-  var el = options.el || document.body;
-  var $el = $(el);
-
-  if ($el.length === 0)
-    throw new Error("No element to insert layout into. Is your element defined? Try a Meteor.startup callback.");
-
-  UI.insert(this._render(options), $el[0], options.nextNode);
-};
-
-/**
  * Register a global helper so users can use DynamicTemplates directly.
  *
  * NOTE: I add a component as the value instead of a function to avoid creating
  * an unnecessary reactive dependency that Meteor creates when a global helper
  * is a function. If it's an object this dependency does not get created.
  */
-UI.registerHelper('DynamicTemplate', UI.Component.extend({
-  render: function () {
-    // this.lookup will find the first component in the hierarchy with a data
-    // property and then call into that data property, returning the value of
-    // the property name once you call that function later. But it doesn't tell
-    // us how many levels up in the heirarchy it was found!
+/*
+UI.registerHelper('DynamicTemplate', function (options) {
+  return Template.__create__('DynamicTemplateWrapper', function () {
+    var self = this;
+    debugger;
     var template = new DynamicTemplate({
-      template: this.lookup('template'),
-      data: this.lookup('data'),
-      content: this.__content
+      template: function () { return self.lookup('template'); },
+      data: function () { return self.lookup('data'); },
+      content: this.templateContentBlock
     });
 
     return template.create();
-  }
+  });
+});
+*/
+
+/*
+UI.registerHelper('DynamicTemplate', Blaze.View(function () {
 }));
+*/
 
 /**
  * Namespacing
