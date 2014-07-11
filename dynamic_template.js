@@ -1,6 +1,13 @@
+/*****************************************************************************/
+/* Helpers */
+/*****************************************************************************/
 typeOf = function (value) {
   return Object.prototype.toString.call(value);
 };
+
+/*****************************************************************************/
+/* DynamicTemplate */
+/*****************************************************************************/
 
 /**
  * Render a component to the page whose template and data context can change
@@ -147,6 +154,7 @@ DynamicTemplate.prototype.create = function (options) {
 
   this.view = view;
   view.__dynamicTemplate__ = this;
+  view.kind = this.kind;
   return view;
 };
 
@@ -204,6 +212,10 @@ DynamicTemplate.prototype.insert = function (options) {
   return this;
 };
 
+/*****************************************************************************/
+/* DynamicTemplate Static Methods */
+/*****************************************************************************/
+
 /**
  * Get the first parent data context that are not inclusion arguments
  * (see above function). Note: This function can create reactive dependencies.
@@ -240,7 +252,7 @@ DynamicTemplate.getInclusionArguments = function (view) {
   if (!parent)
     return null;
 
-  if (parent.__isTemplateWith && parent.kind === 'with');
+  if (parent.__isTemplateWith && parent.kind === 'with')
     return parent.dataVar.get();
 
   return null;
@@ -276,6 +288,9 @@ DynamicTemplate.args = function (view) {
   };
 };
 
+/*****************************************************************************/
+/* UI Helpers */
+/*****************************************************************************/
 UI.registerHelper('DynamicTemplate', Template.__create__('DynamicTemplateHelper', function () {
   var args = DynamicTemplate.args(this);
 
@@ -286,8 +301,7 @@ UI.registerHelper('DynamicTemplate', Template.__create__('DynamicTemplateHelper'
   }).create();
 }));
 
-/**
- * Namespacing
- */
+/*****************************************************************************/
+/* Namespacing */
+/*****************************************************************************/
 Iron.DynamicTemplate = DynamicTemplate;
-
