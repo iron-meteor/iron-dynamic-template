@@ -43,10 +43,10 @@ var withDiv = function (callback) {
 var withRenderedTemplate = function (template, callback) {
   withDiv(function (el) {
     template = _.isString(template) ? Template[template] : template;
-    var cmp = UI.render(template);
-    UI.insert(cmp, el);
+    var range = Blaze.render(template);
+    range.attach(el);
     Deps.flush();
-    callback(cmp, el);
+    callback(el);
   });
 };
 
@@ -85,19 +85,19 @@ Template.DynamicWithBlock.helpers({
 });
 
 Tinytest.add('DynamicTemplate - Static rendering with no data', function (test) {
-  withRenderedTemplate('Static', function (cmp, el) {
+  withRenderedTemplate('Static', function (el) {
     test.equal(el.innerHTML.compact(), 'NoData');
   });
 });
 
 Tinytest.add('DynamicTemplate - Static rendering with nonreactive data helper', function (test) {
-  withRenderedTemplate('StaticData', function (cmp, el) {
+  withRenderedTemplate('StaticData', function (el) {
     test.equal(el.innerHTML.compact(), 'WithData-data');
   });
 });
 
 Tinytest.add('DynamicTemplate - Dynamic rendering with no data', function (test) {
-  withRenderedTemplate('Dynamic', function (cmp, el) {
+  withRenderedTemplate('Dynamic', function (el) {
     // starts off empty
     test.equal(el.innerHTML.compact(), '');
 
@@ -126,7 +126,7 @@ Tinytest.add('DynamicTemplate - Rendering with dynamic data', function (test) {
 
   reactiveData._value = 'init';
 
-  withRenderedTemplate('DynamicData', function (cmp, el) {
+  withRenderedTemplate('DynamicData', function (el) {
     // we've rendered the template to the page
     test.equal(renderCount, 1);
 
@@ -166,7 +166,7 @@ Tinytest.add('DynamicTemplate - Rendering with dynamic parent data', function (t
   // star the data value off as an empty string so the template still renders
   reactiveData._value = 'init';
 
-  withRenderedTemplate('DynamicParentData', function (cmp, el) {
+  withRenderedTemplate('DynamicParentData', function (el) {
     // we've rendered the template to the page
     test.equal(renderCount, 1);
 
@@ -199,7 +199,7 @@ Tinytest.add('DynamicTemplate - Rendering with dynamic parent data', function (t
 
 
 Tinytest.add('DynamicTemplate - Block content', function (test) {
-  withRenderedTemplate('DynamicWithBlock', function (cmp, el) {
+  withRenderedTemplate('DynamicWithBlock', function (el) {
     // block content should be rendered since we don't have a template yet
     test.equal(el.innerHTML.compact(), 'default');
 
@@ -225,8 +225,8 @@ Tinytest.add('DynamicTemplate - From JavaScript', function (test) {
   var tmpl = new Iron.DynamicTemplate({template: 'One', data: getData});
 
   // calling create() on the dynamic template creates and returns a new
-  // UI.Component to be rendered.
-  withRenderedTemplate(tmpl.create(), function (cmp, el) {
+  // View to be rendered.
+  withRenderedTemplate(tmpl.create(), function (el) {
     test.equal(el.innerHTML.compact(), 'One');
 
     tmpl.template('WithData');
@@ -252,7 +252,7 @@ Tinytest.add('DynamicTemplate - default template', function (test) {
 
   // calling create() on the dynamic template creates and returns a new
   // UI.Component to be rendered.
-  withRenderedTemplate(tmpl.create(), function (cmp, el) {
+  withRenderedTemplate(tmpl.create(), function (el) {
     test.equal(el.innerHTML.compact(), 'One', 'default template not set from options');
 
     tmpl.template('Two');
@@ -273,6 +273,7 @@ Tinytest.add('DynamicTemplate - default template', function (test) {
   });
 });
 
+/*
 Tinytest.add('DynamicTemplate - onRender callbacks', function (test) {
 
   var tmpl = new Iron.DynamicTemplate({defaultTemplate: 'One'});
@@ -288,7 +289,7 @@ Tinytest.add('DynamicTemplate - onRender callbacks', function (test) {
 
   // calling create() on the dynamic template creates and returns a new
   // UI.Component to be rendered.
-  withRenderedTemplate(tmpl.create(), function (cmp, el) {
+  withRenderedTemplate(tmpl.create(), function (el) {
     test.equal(calls.length, 1);
 
     tmpl.template('Two');
@@ -300,3 +301,4 @@ Tinytest.add('DynamicTemplate - onRender callbacks', function (test) {
     test.instanceOf(call.component, Object);
   });
 });
+*/

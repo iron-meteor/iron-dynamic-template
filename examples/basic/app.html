@@ -3,7 +3,7 @@
 </head>
 
 <body>
-  {{> InlineBlock}}
+  {{> UsingHelpers}}
 </body>
 
 <template name="WithDynamicTemplate">
@@ -24,6 +24,20 @@
   {{#DynamicTemplate template=getTemplate}}
     Some default text while waiting for another template
   {{/DynamicTemplate}}
+</template>
+
+<template name="UsingHelpers">
+  {{#DynamicTemplate template=getTemplate data=getData}}
+    Default content when there is no template.
+  {{/DynamicTemplate}}
+</template>
+
+<template name="One">
+One {{title}}
+</template>
+
+<template name="Two">
+Two {{title}}
 </template>
 
 <template name="MyLayout">

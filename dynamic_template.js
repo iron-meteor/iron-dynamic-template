@@ -2,59 +2,9 @@ typeOf = function (value) {
   return Object.prototype.toString.call(value);
 };
 
-findComponentWithProp = function (id, comp) {
-  while (comp) {
-    if (typeof comp[id] !== 'undefined')
-      return comp;
-    comp = comp.parent;
-  }
-  return null;
-};
-
-/**
- * Get inclusion arguments if any.
- *
- * Uses the __isTemplateWith property set when a parent component is used
- * specificially for a data context with inclusion args.
- *
- * Inclusion arguments are arguments provided in a template like this:
- * {{> yield "inclusionArg"}}
- * or
- * {{> yield region="inclusionArgValue"}}
- */
-getInclusionArguments = function (cmp) {
-  var parent = cmp && cmp.parent;
-
-  if (!parent)
-    return null;
-
-  if (parent.__isTemplateWith && parent.data)
-    return (typeof parent.data === 'function') ? parent.data() : parent.data;
-
-  return null;
-};
-
-/**
- * Get the first parent data context that does not include inclusion arguments
- * (see above function).
- */
-getParentDataContext = function (view) {
-  // start off with the parent.
-  view = view.parentView;
-
-  while (view) {
-    if (view.kind === 'with' && !view.__isTemplateWith)
-      return view.dataVar.get();
-    else
-      view = view.parentView;
-  }
-
-  return null;
-};
-
 /**
  * Render a component to the page whose template and data context can change
- * dynaimcally.
+ * dynamically, either from code or from helpers.
  *
  */
 DynamicTemplate = function (options) {
@@ -129,80 +79,90 @@ DynamicTemplate.prototype.data = function (value) {
 };
 
 /**
- * Return a UI.Component.
- * XXX add back hooks
+ * Create the view if it hasn't been created yet.
  */
 DynamicTemplate.prototype.create = function (options) {
   var self = this;
 
-  if (this.view)
-    throw new Error("view is already created");
+  var view = Blaze.View('DynamicTemplate', function () {
+    var thisView = this;
 
-  var view = self.view = Blaze.View(self.kind, function () {
-    var template = self.template();
+    return Blaze.With(function () {
+      // NOTE: This will rerun anytime the data function invalidates this
+      // computation OR if created from an inclusion helper (see note below) any
+      // time any of the argument functions invlidate the computation. For
+      // example, when the template changes this function will rerun also. But
+      // it's probably generally ok. The more serious use case is to not
+      // re-render the entire template every time the data context changes.
+      var result = self.data();
 
-    // is it a template name like "MyTemplate"?
-    if (typeof template === 'string') {
-      var tmpl = Template[template];
+      if (typeof result !== 'undefined')
+        // looks like data was set directly on this dynamic template
+        return result;
+      else
+        // return the first parent data context that is not inclusion arguments
+        return DynamicTemplate.getParentDataContext(thisView);
+    }, function () {
+      // NOTE: When DynamicTemplate is used from a template inclusion helper
+      // like this {{> DynamicTemplate template=getTemplate data=getData}} the
+      // function below will rerun any time the getData function invalidates the
+      // argument data computation. BUT, Spacebars.include will only re-render
+      // the template if the template has actually changed. This is why we use
+      // Spacebars.include here: To create a computation, and to only re-render
+      // if the template changes.
+      return Spacebars.include(function () {
+        var template = self.template();
 
-      if (!tmpl)
-        throw new Error("Couldn't find a template named '" + template + "'. Are you sure you defined it?");
+        var tmpl = null;
 
-      return tmpl;
-    }
+        // is it a template name like "MyTemplate"?
+        if (typeof template === 'string') {
+          tmpl = Template[template];
 
-    // or maybe a component?
-    if (typeOf(template) === '[object Object]')
-      return template;
+          if (!tmpl)
+            throw new Error("Couldn't find a template named '" + template + "'. Are you sure you defined it?");
+        } else if (typeOf(template) === '[object Object]') {
+          // or maybe a view already?
+          tmpl = template;
+        } else if (typeof self._content !== 'undefined') {
+          // or maybe its block content like 
+          // {{#DynamicTemplate}}
+          //  Some block
+          // {{/DynamicTemplate}}
+          tmpl = self._content;
+        }
 
-    // or maybe its block content like 
-    // {{#DynamicTemplate}}
-    //  Some block
-    // {{/DynamicTemplate}}
-    if (typeof self._content !== 'undefined')
-      return self._content;
-
-    // guess we don't have a template assigned yet
-    return null;
+        return tmpl;
+      });
+    });
   });
 
-  view.__dynamicTemplate__ = self;
-
-  /**
-   * Return either the data which is set on the dynamic template directly, or the next
-   * ancestor's data.
-   */
-  var dataView = Blaze.With(function () {
-    var result = self.data();
-
-    if (typeof result !== 'undefined')
-      // looks like data was set directly on this dynamic template
-      return result;
-    else
-      // return the first parent data context that is not inclusion arguments
-      return getParentDataContext(dataView);
-  }, function () {
-    return view;
-  });
-
-  return dataView;
+  this.view = view;
+  view.__dynamicTemplate__ = this;
+  return view;
 };
 
 /*
- * Create a new component and call UI.render.
+ * Calls Blaze.render to create a new domrange from our view, if the range
+ * doesn't already exist. Automatically calls create() if we haven't created the
+ * view yet.
  */
 DynamicTemplate.prototype.render = function (options) {
   options = options || {};
 
   if (this.range)
-    throw new Error("view is already rendered");
+    return this.range;
 
-  var range = this.range = Blaze.render(this.create(options), options.parentView);
+  if (!this.view)
+    this.create(options);
+
+  var range = this.range = Blaze.render(this.view, options.parentView);
+
   return range;
 };
 
 /**
- * Insert the Layout component into the dom.
+ * Insert the Layout view into the dom.
  */
 DynamicTemplate.prototype.insert = function (options) {
   options = options || {};
@@ -213,63 +173,94 @@ DynamicTemplate.prototype.insert = function (options) {
   if ($el.length === 0)
     throw new Error("No element to insert layout into. Is your element defined? Try a Meteor.startup callback.");
 
-  var range = this.render(options);
-  range.attach($el[0], options.nextNode);
-};
+  if (!this.range)
+    this.render(options);
 
-/**
- * Register a callback to be called at component render time.
- */
-DynamicTemplate.prototype.onRender = function (callback) {
-  var hooks = this._hooks['onRender'] = this._hooks['onRender'] || [];
-  hooks.push(callback);
+  this.range.attach($el[0], options.nextNode);
   return this;
 };
 
+/**
+ * Get the first parent data context that are not inclusion arguments
+ * (see above function). Note: This function can create reactive dependencies.
+ */
+DynamicTemplate.getParentDataContext = function (view) {
+  // start off with the parent.
+  view = view.parentView;
+
+  while (view) {
+    if (view.kind === 'with' && !view.__isTemplateWith)
+      return view.dataVar.get();
+    else
+      view = view.parentView;
+  }
+
+  return null;
+};
+
 
 /**
- * Run hook functions for a given hook name.
+ * Get inclusion arguments, if any, from a view.
  *
- * hooks['onRender'] = [fn1, fn2, fn3]
+ * Uses the __isTemplateWith property set when a parent view is used
+ * specificially for a data context with inclusion args.
+ *
+ * Inclusion arguments are arguments provided in a template like this:
+ * {{> yield "inclusionArg"}}
+ * or
+ * {{> yield region="inclusionArgValue"}}
  */
-DynamicTemplate.prototype._runHooks = function (name /*, args */) {
-  var args = _.toArray(arguments).slice(1);
-  var hooks = this._hooks[name] || [];
-  var hook;
+DynamicTemplate.getInclusionArguments = function (view) {
+  var parent = view && view.parentView;
 
-  for (var i = 0; i < hooks.length; i++) {
-    hook = hooks[i];
-    hook.apply(this, args);
-  }
+  if (!parent)
+    return null;
+
+  if (parent.__isTemplateWith && parent.kind === 'with');
+    return parent.dataVar.get();
+
+  return null;
 };
 
 /**
- * Register a global helper so users can use DynamicTemplates directly.
+ * Given a view, return a function that can be used to access argument values at
+ * the time the view was rendered. There are two key benefits:
  *
- * NOTE: I add a component as the value instead of a function to avoid creating
- * an unnecessary reactive dependency that Meteor creates when a global helper
- * is a function. If it's an object this dependency does not get created.
+ * 1. Save the argument data at the time of rendering. When you use lookup(...)
+ *    it starts from the current data context which can change.
+ * 2. Defer creating a dependency on inclusion arguments until later.
+ *
+ * Example:
+ *
+ *   {{> MyTemplate template="MyTemplate"
+ *   var args = DynamicTemplate.args(view);
+ *   var tmplValue = args('template');
+ *     => "MyTemplate"
  */
-/*
-UI.registerHelper('DynamicTemplate', function (options) {
-  return Template.__create__('DynamicTemplateWrapper', function () {
-    var self = this;
-    debugger;
-    var template = new DynamicTemplate({
-      template: function () { return self.lookup('template'); },
-      data: function () { return self.lookup('data'); },
-      content: this.templateContentBlock
-    });
+DynamicTemplate.args = function (view) {
+  return function (key) {
+    var data = DynamicTemplate.getInclusionArguments(view);
 
-    return template.create();
-  });
-});
-*/
+    if (data) {
+      if (key)
+        return data[key];
+      else
+        return data;
+    }
 
-/*
-UI.registerHelper('DynamicTemplate', Blaze.View(function () {
+    return null;
+  };
+};
+
+UI.registerHelper('DynamicTemplate', Template.__create__('DynamicTemplateHelper', function () {
+  var args = DynamicTemplate.args(this);
+
+  return new DynamicTemplate({
+    data: function () { return args('data'); },
+    template: function () { return args('template'); },
+    content: this.templateContentBlock
+  }).create();
 }));
-*/
 
 /**
  * Namespacing

@@ -26,4 +26,14 @@ if (Meteor.isClient) {
       return Session.get('template');
     }
   });
+
+  Template.UsingHelpers.helpers({
+    getData: function () {
+      return Session.get('data');
+    },
+
+    getTemplate: function () {
+      return Session.get('template');
+    }
+  });
 }
