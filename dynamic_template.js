@@ -182,25 +182,6 @@ DynamicTemplate.prototype._runHooks = function (name, view) {
   }
 };
 
-/*
- * Calls Blaze.render to create a new domrange from our view, if the range
- * doesn't already exist. Automatically calls create() if we haven't created the
- * view yet.
- */
-DynamicTemplate.prototype.render = function (options) {
-  options = options || {};
-
-  if (this.range)
-    return this.range;
-
-  if (!this.view)
-    this.create(options);
-
-  var range = this.range = Blaze.render(this.view, options.parentView);
-
-  return range;
-};
-
 /**
  * Insert the Layout view into the dom.
  */
@@ -213,8 +194,11 @@ DynamicTemplate.prototype.insert = function (options) {
   if ($el.length === 0)
     throw new Error("No element to insert layout into. Is your element defined? Try a Meteor.startup callback.");
 
+  if (!this.view)
+    this.create(options);
+
   if (!this.range)
-    this.render(options);
+    this.range = Blaze.render(this.view, options.parentView);
 
   this.range.attach($el[0], options.nextNode);
   return this;
