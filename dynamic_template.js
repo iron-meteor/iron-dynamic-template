@@ -137,9 +137,49 @@ DynamicTemplate.prototype.create = function (options) {
     });
   });
 
+  // wire up the view lifecycle callbacks
+  _.each(['onCreated', 'onMaterialized', 'onRendered', 'onDestroyed'], function (hook) {
+    view[hook](function () {
+      // "this" is the view instance
+      self._runHooks(hook, this);
+    });
+  });
+
   this.view = view;
   view.__dynamicTemplate__ = this;
   return view;
+};
+
+/**
+ * Destroy the dynamic template, also destroying the view if it exists.
+ */
+DynamicTemplate.prototype.destroy = function () {
+  if (this.view)
+    Blaze.destroyView(this.view);
+};
+
+
+/**
+ * View lifecycle hooks.
+ */
+_.each(['onCreated', 'onMaterialized', 'onRendered', 'onDestroyed'], function (hook) {
+  DynamicTemplate.prototype[hook] = function (cb) {
+    var hooks = this._hooks[hook] = this._hooks[hook] || [];
+    hooks.push(cb);
+    return this;
+  };
+});
+
+DynamicTemplate.prototype._runHooks = function (name, view) {
+  var hooks = this._hooks[name] || [];
+  var hook;
+
+  for (var i = 0; i < hooks.length; i++) {
+    hook = hooks[i];
+    // keep the "thisArg" pointing to the view, but make the first parameter to
+    // the callback teh dynamic template instance.
+    hook.call(view, this);
+  }
 };
 
 /*

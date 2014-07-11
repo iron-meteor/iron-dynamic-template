@@ -273,32 +273,45 @@ Tinytest.add('DynamicTemplate - default template', function (test) {
   });
 });
 
-/*
-Tinytest.add('DynamicTemplate - onRender callbacks', function (test) {
-
+Tinytest.add('DynamicTemplate - view lifecycle callbacks', function (test) {
   var tmpl = new Iron.DynamicTemplate({defaultTemplate: 'One'});
   var calls = [];
 
-  tmpl.onRender(function (dynamicTemplate, component) {
-    calls.push({
-      dynamicTemplate: dynamicTemplate,
-      component: component,
-      thisArg: this
+  _.each(['onCreated', 'onMaterialized', 'onRendered', 'onDestroyed'], function (hook) {
+    tmpl[hook](function (dynamicTemplate) {
+      calls.push({
+        name: hook,
+        dynamicTemplate: dynamicTemplate,
+        thisArg: this
+      });
     });
   });
 
   // calling create() on the dynamic template creates and returns a new
   // UI.Component to be rendered.
+  var call;
   withRenderedTemplate(tmpl.create(), function (el) {
-    test.equal(calls.length, 1);
+    test.equal(calls.length, 3, 'onCreated, onMaterialized and onRendered');
 
-    tmpl.template('Two');
-    Deps.flush();
-    test.equal(calls.length, 2);
-
-    var call = calls[1];
+    call = calls[0];
+    test.equal(call.name, 'onCreated');
     test.instanceOf(call.dynamicTemplate, Iron.DynamicTemplate);
-    test.instanceOf(call.component, Object);
+    test.instanceOf(call.thisArg, Blaze.View);
+
+    call = calls[1];
+    test.equal(call.name, 'onMaterialized');
+    test.instanceOf(call.dynamicTemplate, Iron.DynamicTemplate);
+    test.instanceOf(call.thisArg, Blaze.View);
+
+    call = calls[2];
+    test.equal(call.name, 'onRendered');
+    test.instanceOf(call.dynamicTemplate, Iron.DynamicTemplate);
+    test.instanceOf(call.thisArg, Blaze.View);
+
+    tmpl.destroy();
+    call = calls[3];
+    test.equal(call.name, 'onDestroyed');
+    test.instanceOf(call.dynamicTemplate, Iron.DynamicTemplate);
+    test.instanceOf(call.thisArg, Blaze.View);
   });
 });
-*/

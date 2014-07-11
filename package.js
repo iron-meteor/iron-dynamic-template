@@ -6,6 +6,8 @@ Package.describe({
 });
 
 Package.on_use(function (api) {
+  api.use('blaze');
+  api.use('underscore');
   api.use('ui');
   api.use('spacebars');
   api.use('jquery')
