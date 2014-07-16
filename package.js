@@ -26,6 +26,7 @@ Package.on_test(function (api) {
   api.use('tinytest');
   api.use('test-helpers');
   api.use('ui');
+  api.use('deps');
 
   api.addFiles('dynamic_template_test.html', 'client');
   api.addFiles('dynamic_template_test.js', 'client');
