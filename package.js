@@ -14,19 +14,19 @@ Package.on_use(function (api) {
   api.use('deps');
   api.use('templating');
 
-  api.use('iron-core');
-  api.imply('iron-core');
+  api.use('iron:core');
+  api.imply('iron:core');
 
-  api.add_files('dynamic_template.js', 'client');
+  api.addFiles('dynamic_template.js', 'client');
 });
 
 Package.on_test(function (api) {
-  api.use('iron-dynamic-template');
+  api.use('iron:dynamic-template');
   api.use('templating');
   api.use('tinytest');
   api.use('test-helpers');
   api.use('ui');
 
-  api.add_files('dynamic_template_test.html', 'client');
-  api.add_files('dynamic_template_test.js', 'client');
+  api.addFiles('dynamic_template_test.html', 'client');
+  api.addFiles('dynamic_template_test.js', 'client');
 });
