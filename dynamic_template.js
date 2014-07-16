@@ -91,6 +91,10 @@ DynamicTemplate.prototype.data = function (value) {
 DynamicTemplate.prototype.create = function (options) {
   var self = this;
 
+  if (this.isCreated)
+    return;
+  this.isCreated = true;
+
   var view = Blaze.View('DynamicTemplate', function () {
     var thisView = this;
 
@@ -152,6 +156,11 @@ DynamicTemplate.prototype.create = function (options) {
     });
   });
 
+  view.onMaterialized(function () {
+    // avoid inserting the view twice by accident.
+    self.isInserted = true;
+  });
+
   this.view = view;
   view.__dynamicTemplate__ = this;
   view.kind = this.kind;
@@ -164,6 +173,7 @@ DynamicTemplate.prototype.create = function (options) {
 DynamicTemplate.prototype.destroy = function () {
   if (this.view)
     Blaze.destroyView(this.view);
+  this.isDestroyed = true;
 };
 
 
@@ -195,6 +205,10 @@ DynamicTemplate.prototype._runHooks = function (name, view) {
  */
 DynamicTemplate.prototype.insert = function (options) {
   options = options || {};
+
+  if (this.isInserted)
+    return;
+  this.isInserted = true;
 
   var el = options.el || document.body;
   var $el = $(el);
