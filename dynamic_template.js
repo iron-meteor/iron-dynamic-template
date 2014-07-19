@@ -41,6 +41,9 @@ DynamicTemplate.prototype.template = function (value) {
     return;
   }
 
+  if (arguments.length > 0)
+    return;
+
   this._templateDep.depend();
 
   // do we have a template?
@@ -96,8 +99,11 @@ DynamicTemplate.prototype.data = function (value) {
 DynamicTemplate.prototype.create = function (options) {
   var self = this;
 
-  if (this.isCreated)
+  if (this.isCreated) {
+    debug(this._region + " view already created");
     return;
+  }
+
   this.isCreated = true;
 
   var view = Blaze.View('DynamicTemplate', function () {
