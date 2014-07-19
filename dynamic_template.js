@@ -1,4 +1,9 @@
 /*****************************************************************************/
+/* Imports */
+/*****************************************************************************/
+debug = Iron.utils.debug('iron:dynamic-template');
+
+/*****************************************************************************/
 /* Helpers */
 /*****************************************************************************/
 typeOf = function (value) {
@@ -99,6 +104,7 @@ DynamicTemplate.prototype.create = function (options) {
     var thisView = this;
 
     return Blaze.With(function () {
+      debug(self.kind + " <region: " + (self._region || "none") + "> data computation: " + Deps.currentComputation._id);
       // NOTE: This will rerun anytime the data function invalidates this
       // computation OR if created from an inclusion helper (see note below) any
       // time any of the argument functions invlidate the computation. For
@@ -122,8 +128,9 @@ DynamicTemplate.prototype.create = function (options) {
       // Spacebars.include here: To create a computation, and to only re-render
       // if the template changes.
       return Spacebars.include(function () {
-        var template = self.template();
+        debug(self.kind + " <region: " + (self._region || "none") + "> spacebars include: " + Deps.currentComputation._id);
 
+        var template = self.template();
         var tmpl = null;
 
         // is it a template name like "MyTemplate"?
