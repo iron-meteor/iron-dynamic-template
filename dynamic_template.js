@@ -30,6 +30,12 @@ DynamicTemplate = function (options) {
   this._dataDep = new Deps.Dependency;
   this._hooks = {};
   this.kind = options.kind || 'DynamicTemplate';
+
+  // has the Blaze.View been created?
+  this.isCreated = false;
+
+  // has the Blaze.View been destroyed and not created again?
+  this.isDestroyed = false;
 };
 
 /**
