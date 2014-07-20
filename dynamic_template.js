@@ -2,6 +2,7 @@
 /* Imports */
 /*****************************************************************************/
 debug = Iron.utils.debug('iron:dynamic-template');
+camelCase = Iron.utils.camelCase;
 
 /*****************************************************************************/
 /* Helpers */
@@ -144,7 +145,12 @@ DynamicTemplate.prototype.create = function (options) {
           tmpl = Template[template];
 
           if (!tmpl)
-            throw new Error("Couldn't find a template named '" + template + "'. Are you sure you defined it?");
+            // as a fallback double check the user didn't actually define
+            // a camelCase version of the template.
+            tmpl = Template[camelCase(template)];
+
+          if (!tmpl)
+            throw new Error("Couldn't find a template named " + JSON.stringify(template) + " or " + JSON.stringify(camelCase(template))+ ". Are you sure you defined it?");
         } else if (typeOf(template) === '[object Object]') {
           // or maybe a view already?
           tmpl = template;
