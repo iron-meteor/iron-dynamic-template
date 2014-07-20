@@ -100,11 +100,11 @@ DynamicTemplate.prototype.create = function (options) {
   var self = this;
 
   if (this.isCreated) {
-    debug(this._region + " view already created");
-    return;
+    throw new Error("DynamicTemplate view is already created");
   }
 
   this.isCreated = true;
+  this.isDestroyed = false;
 
   var view = Blaze.View('DynamicTemplate', function () {
     var thisView = this;
@@ -184,11 +184,13 @@ DynamicTemplate.prototype.create = function (options) {
  * Destroy the dynamic template, also destroying the view if it exists.
  */
 DynamicTemplate.prototype.destroy = function () {
-  if (this.view)
+  if (this.isCreated) {
     Blaze.destroyView(this.view);
-  this.isDestroyed = true;
+    this.view = null;
+    this.isDestroyed = true;
+    this.isCreated = false;
+  }
 };
-
 
 /**
  * View lifecycle hooks.
