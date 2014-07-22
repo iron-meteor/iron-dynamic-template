@@ -197,6 +197,12 @@ Tinytest.add('DynamicTemplate - Rendering with dynamic parent data', function (t
   });
 });
 
+Tinytest.add('DynamicTemplate - Rendering inherits data correctly', function (test) {
+  withRenderedTemplate('InheritedParentData', function (el) {
+    test.equal(el.innerHTML.compact(), 'WithDataAndParentData-inner-outer');
+  });
+});
+
 
 Tinytest.add('DynamicTemplate - Block content', function (test) {
   withRenderedTemplate('DynamicWithBlock', function (el) {

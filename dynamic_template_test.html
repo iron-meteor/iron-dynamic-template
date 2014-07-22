@@ -20,6 +20,14 @@
   {{/with}}
 </template>
 
+<template name="InheritedParentData">
+  {{#with 'outer'}}
+    {{#with 'inner'}}
+      {{> DynamicTemplate template="WithDataAndParentData"}}
+    {{/with}}
+  {{/with}}
+</template>
+
 <template name="DynamicWithBlock">
   {{#DynamicTemplate template=getTemplate}}
     default
@@ -33,6 +41,11 @@ NoData
 <template name="WithData">
 WithData-{{this}} 
 </template>
+
+<template name="WithDataAndParentData">
+WithDataAndParentData-{{this}}-{{..}}
+</template>
+
 
 <template name="One">
 One
