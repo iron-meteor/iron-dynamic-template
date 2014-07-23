@@ -28,7 +28,9 @@ DynamicTemplate = function (options) {
   this._data = options.data;
   this._templateDep = new Deps.Dependency;
   this._dataDep = new Deps.Dependency;
+  this._hasControllerDep = new Deps.Dependency;
   this._hooks = {};
+  this._controller = new Blaze.ReactiveVar; 
   this.kind = options.kind || 'DynamicTemplate';
 
   // has the Blaze.View been created?
@@ -251,6 +253,34 @@ DynamicTemplate.prototype.insert = function (options) {
 
   this.range.attach($el[0], options.nextNode);
   return this;
+};
+
+/**
+ * Reactively return the value of the current controller.
+ */
+DynamicTemplate.prototype.getController = function () {
+  return this._controller.get();
+};
+
+/**
+ * Set the reactive value of the controller.
+ */
+DynamicTemplate.prototype.setController = function (controller) {
+  var didHaveController = !!this._hasController;
+  this._hasController = (typeof controller !== 'undefined');
+
+  if (didHaveController !== this._hasController)
+    this._hasControllerDep.changed();
+
+  return this._controller.set(controller);
+};
+
+/**
+ * Reactively returns true if the template has a controller and false otherwise.
+ */
+DynamicTemplate.prototype.hasController = function () {
+  this._hasControllerDep.depend();
+  return this._hasController;
 };
 
 /*****************************************************************************/
