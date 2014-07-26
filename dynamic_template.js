@@ -115,8 +115,11 @@ DynamicTemplate.prototype.create = function (options) {
   this.isCreated = true;
   this.isDestroyed = false;
 
+  var templateVar = Blaze.ReactiveVar(null);
+
   var view = Blaze.View('DynamicTemplate', function () {
     var thisView = this;
+    var template = templateVar.get();
 
     return Blaze.With(function () {
       debug(self.kind + " <region: " + (self._region || "none") + "> data computation: " + Deps.currentComputation._id);
@@ -142,36 +145,39 @@ DynamicTemplate.prototype.create = function (options) {
       // the template if the template has actually changed. This is why we use
       // Spacebars.include here: To create a computation, and to only re-render
       // if the template changes.
-      return Spacebars.include(function () {
-        debug(self.kind + " <region: " + (self._region || "none") + "> spacebars include: " + Deps.currentComputation._id);
+      debug(self.kind + " <region: " + (self._region || "none") + "> spacebars include: " + Deps.currentComputation._id);
 
-        var template = self.template();
-        var tmpl = null;
+      var tmpl = null;
 
-        // is it a template name like "MyTemplate"?
-        if (typeof template === 'string') {
-          tmpl = Template[template];
+      // is it a template name like "MyTemplate"?
+      if (typeof template === 'string') {
+        tmpl = Template[template];
 
-          if (!tmpl)
-            // as a fallback double check the user didn't actually define
-            // a camelCase version of the template.
-            tmpl = Template[camelCase(template)];
+        if (!tmpl)
+          // as a fallback double check the user didn't actually define
+          // a camelCase version of the template.
+          tmpl = Template[camelCase(template)];
 
-          if (!tmpl)
-            throw new Error("Couldn't find a template named " + JSON.stringify(template) + " or " + JSON.stringify(camelCase(template))+ ". Are you sure you defined it?");
-        } else if (typeOf(template) === '[object Object]') {
-          // or maybe a view already?
-          tmpl = template;
-        } else if (typeof self._content !== 'undefined') {
-          // or maybe its block content like 
-          // {{#DynamicTemplate}}
-          //  Some block
-          // {{/DynamicTemplate}}
-          tmpl = self._content;
-        }
+        if (!tmpl)
+          throw new Error("Couldn't find a template named " + JSON.stringify(template) + " or " + JSON.stringify(camelCase(template))+ ". Are you sure you defined it?");
+      } else if (typeOf(template) === '[object Object]') {
+        // or maybe a view already?
+        tmpl = template;
+      } else if (typeof self._content !== 'undefined') {
+        // or maybe its block content like 
+        // {{#DynamicTemplate}}
+        //  Some block
+        // {{/DynamicTemplate}}
+        tmpl = self._content;
+      }
 
-        return tmpl;
-      });
+      return tmpl;
+    });
+  });
+
+  view.onCreated(function () {
+    this.autorun(function () {
+      templateVar.set(self.template());
     });
   });
 
