@@ -1,7 +1,7 @@
 
-v0.2.0 / 2014-07-25
+v0.2.1 / 2014-07-25
 ==================
-
+  * fix if rendering a new template start with fresh data context
   * fix to work with old packaging system for now
   * add reactive controller functions
   * Added a failing test for parent data inheritance.
