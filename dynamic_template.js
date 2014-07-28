@@ -119,6 +119,10 @@ DynamicTemplate.prototype.create = function (options) {
 
   var view = Blaze.View('DynamicTemplate', function () {
     var thisView = this;
+
+    // create the template dependency here because we need the entire
+    // dynamic template to re-render if the template changes, including
+    // the Blaze.With view.
     var template = templateVar.get();
 
     return Blaze.With(function () {
@@ -141,10 +145,7 @@ DynamicTemplate.prototype.create = function (options) {
       // NOTE: When DynamicTemplate is used from a template inclusion helper
       // like this {{> DynamicTemplate template=getTemplate data=getData}} the
       // function below will rerun any time the getData function invalidates the
-      // argument data computation. BUT, Spacebars.include will only re-render
-      // the template if the template has actually changed. This is why we use
-      // Spacebars.include here: To create a computation, and to only re-render
-      // if the template changes.
+      // argument data computation.
       debug(self.kind + " <region: " + (self._region || "none") + "> spacebars include: " + Deps.currentComputation._id);
 
       var tmpl = null;
