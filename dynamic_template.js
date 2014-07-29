@@ -363,6 +363,13 @@ DynamicTemplate.args = function (view) {
   };
 };
 
+/**
+ * Inherit from DynamicTemplate.
+ */
+DynamicTemplate.extend = function (props) {
+  return Iron.utils.extend(this, props);
+};
+
 /*****************************************************************************/
 /* UI Helpers */
 /*****************************************************************************/
