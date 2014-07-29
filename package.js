@@ -16,7 +16,7 @@ Package.on_use(function (api) {
   api.use('iron-core');
   api.imply('iron-core');
 
-  api.add_files('dynamic_template.js', 'client');
+  api.add_files('dynamic_template.js');
 });
 
 Package.on_test(function (api) {
