@@ -8,8 +8,9 @@ if (Meteor.isClient) {
       console.log('****************************');
     };
 
-    console.log('um');
     dynamic = new Iron.DynamicTemplate(/* {template: 'One', data: getData} */);  
+
+    dynamic.template('One');
 
     _.each(['onCreated', 'onMaterialized', 'onRendered', 'onDestroyed'], function (hook) {
       dynamic[hook](function () {

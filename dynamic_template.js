@@ -119,10 +119,13 @@ DynamicTemplate.prototype.create = function (options) {
 
   var view = Blaze.View('DynamicTemplate', function () {
     var thisView = this;
+
+    // create the template dependency here because we need the entire
+    // dynamic template to re-render if the template changes, including
+    // the Blaze.With view.
     var template = templateVar.get();
 
     return Blaze.With(function () {
-      debug(self.kind + " <region: " + (self._region || "none") + "> data computation: " + Deps.currentComputation._id);
       // NOTE: This will rerun anytime the data function invalidates this
       // computation OR if created from an inclusion helper (see note below) any
       // time any of the argument functions invlidate the computation. For
@@ -141,12 +144,7 @@ DynamicTemplate.prototype.create = function (options) {
       // NOTE: When DynamicTemplate is used from a template inclusion helper
       // like this {{> DynamicTemplate template=getTemplate data=getData}} the
       // function below will rerun any time the getData function invalidates the
-      // argument data computation. BUT, Spacebars.include will only re-render
-      // the template if the template has actually changed. This is why we use
-      // Spacebars.include here: To create a computation, and to only re-render
-      // if the template changes.
-      debug(self.kind + " <region: " + (self._region || "none") + "> spacebars include: " + Deps.currentComputation._id);
-
+      // argument data computation.
       var tmpl = null;
 
       // is it a template name like "MyTemplate"?
@@ -365,18 +363,28 @@ DynamicTemplate.args = function (view) {
   };
 };
 
+/**
+ * Inherit from DynamicTemplate.
+ */
+DynamicTemplate.extend = function (props) {
+  return Iron.utils.extend(this, props);
+};
+
 /*****************************************************************************/
 /* UI Helpers */
 /*****************************************************************************/
-UI.registerHelper('DynamicTemplate', Template.__create__('DynamicTemplateHelper', function () {
-  var args = DynamicTemplate.args(this);
 
-  return new DynamicTemplate({
-    data: function () { return args('data'); },
-    template: function () { return args('template'); },
-    content: this.templateContentBlock
-  }).create();
-}));
+if (typeof Template !== 'undefined') {
+  UI.registerHelper('DynamicTemplate', Template.__create__('DynamicTemplateHelper', function () {
+    var args = DynamicTemplate.args(this);
+
+    return new DynamicTemplate({
+      data: function () { return args('data'); },
+      template: function () { return args('template'); },
+      content: this.templateContentBlock
+    }).create();
+  }));
+}
 
 /*****************************************************************************/
 /* Namespacing */

@@ -6,4 +6,5 @@
 standard-app-packages
 autopublish
 insecure
-iron-dynamic-template
+iron:dynamic-template
+

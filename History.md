@@ -1,3 +1,10 @@
+v0.3.0 / 2014-08-12
+==================
+  * bump iron:core dep version and add version conflict error
+  * fix package to work with new meteor packaging system
+  * update examples to use new package name
+  * add extend method for inheritance
+  * fix comments about view template reactive var
 
 v0.2.1 / 2014-07-25
 ==================
@@ -17,6 +24,6 @@ v0.2.1 / 2014-07-25
   * add deps dependency for test slice
   * fix package.js to work with packaging system and update readme
 
-v0.1.0 7/16/2014
-
+v0.1.0 / 7/16/2014
+==================
   * Initial package release to atmosphere.
