@@ -12,9 +12,10 @@ Package.on_use(function (api) {
   api.use('deps@1.0.0');
   api.use('templating@1.0.0');
 
-  api.use('iron:core@0.3.1');
+  api.use('iron:core@0.3.2');
   api.imply('iron:core');
 
+  api.add_files('version_conflict_error.js');
   api.add_files('dynamic_template.js');
 });
 
