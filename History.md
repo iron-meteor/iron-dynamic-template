@@ -1,7 +1,6 @@
-
 v0.3.0 / 2014-08-12
 ==================
-  * cmather:iron-dynamic-template is now iron:dynamic-template
+  * bump iron:core dep version and add version conflict error
   * fix package to work with new meteor packaging system
   * update examples to use new package name
   * add extend method for inheritance
