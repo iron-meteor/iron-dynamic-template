@@ -173,28 +173,28 @@ DynamicTemplate.prototype.create = function (options) {
     });
   });
 
-  view.onCreated(function () {
+  view.onViewCreated(function () {
     this.autorun(function () {
       templateVar.set(self.template());
     });
   });
 
   // wire up the view lifecycle callbacks
-  _.each(['onCreated', 'onMaterialized', 'onRendered', 'onDestroyed'], function (hook) {
+  _.each(['onViewCreated', 'onViewReady', '_onViewRendered', 'onViewDestroyed'], function (hook) {
     view[hook](function () {
       // "this" is the view instance
       self._runHooks(hook, this);
     });
   });
 
-  view.onMaterialized(function () {
+  view._onViewRendered(function () {
     // avoid inserting the view twice by accident.
     self.isInserted = true;
   });
 
   this.view = view;
   view.__dynamicTemplate__ = this;
-  view.kind = this.kind;
+  view.name = this.name;
   return view;
 };
 
@@ -203,7 +203,7 @@ DynamicTemplate.prototype.create = function (options) {
  */
 DynamicTemplate.prototype.destroy = function () {
   if (this.isCreated) {
-    Blaze.destroyView(this.view);
+    Blaze.remove(this.view);
     this.view = null;
     this.isDestroyed = true;
     this.isCreated = false;
@@ -213,7 +213,7 @@ DynamicTemplate.prototype.destroy = function () {
 /**
  * View lifecycle hooks.
  */
-_.each(['onCreated', 'onMaterialized', 'onRendered', 'onDestroyed'], function (hook) {
+_.each(['onViewCreated', 'onViewReady', '_onViewRendered', 'onViewDestroyed'], function (hook) {
   DynamicTemplate.prototype[hook] = function (cb) {
     var hooks = this._hooks[hook] = this._hooks[hook] || [];
     hooks.push(cb);
@@ -252,10 +252,8 @@ DynamicTemplate.prototype.insert = function (options) {
   if (!this.view)
     this.create(options);
 
-  if (!this.range)
-    this.range = Blaze.render(this.view, options.parentView);
+  Blaze.render(this.view, $el[0], options.nextNode, options.parentView);
 
-  this.range.attach($el[0], options.nextNode);
   return this;
 };
 
@@ -300,7 +298,7 @@ DynamicTemplate.getParentDataContext = function (view) {
   view = view.parentView;
 
   while (view) {
-    if (view.kind === 'with' && !view.__isTemplateWith)
+    if (view.name === 'with' && !view.__isTemplateWith)
       return view.dataVar.get();
     else
       view = view.parentView;
@@ -327,7 +325,7 @@ DynamicTemplate.getInclusionArguments = function (view) {
   if (!parent)
     return null;
 
-  if (parent.__isTemplateWith && parent.kind === 'with')
+  if (parent.__isTemplateWith)
     return parent.dataVar.get();
 
   return null;
@@ -375,7 +373,7 @@ DynamicTemplate.extend = function (props) {
 /*****************************************************************************/
 
 if (typeof Template !== 'undefined') {
-  UI.registerHelper('DynamicTemplate', Template.__create__('DynamicTemplateHelper', function () {
+  UI.registerHelper('DynamicTemplate', new Template('DynamicTemplateHelper', function () {
     var args = DynamicTemplate.args(this);
 
     return new DynamicTemplate({
