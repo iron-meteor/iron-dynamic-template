@@ -76,7 +76,6 @@ DynamicTemplate.prototype.defaultTemplate = function (value) {
     return this._defaultTemplate;
 };
 
-
 /**
  * Clear the template and data contexts.
  */
@@ -86,7 +85,6 @@ DynamicTemplate.prototype.clear = function () {
   this._data = undefined;
   this._templateDep.changed();
 };
-
 
 /**
  * Get or set the data context.
