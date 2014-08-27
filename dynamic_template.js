@@ -31,7 +31,7 @@ DynamicTemplate = function (options) {
   this._hasControllerDep = new Deps.Dependency;
   this._hooks = {};
   this._controller = new Blaze.ReactiveVar; 
-  this.kind = options.kind || 'DynamicTemplate';
+  this.name = options.name || 'DynamicTemplate';
 
   // has the Blaze.View been created?
   this.isCreated = false;
