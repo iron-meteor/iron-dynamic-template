@@ -252,10 +252,10 @@ DynamicTemplate.prototype.insert = function (options) {
   if (!this.view)
     this.create(options);
 
-  if (!this.range)
-    this.range = Blaze.render(this.view, options.parentView);
+  Blaze.withCurrentView(this.view, function () {
+    Blaze.render(this.view, $el[0], options.nextNode);
+  });
 
-  this.range.attach($el[0], options.nextNode);
   return this;
 };
 
