@@ -1,11 +1,11 @@
 Package.describe({
   summary: 'Dynamically create and update templates and their data contexts.',
-  version: "0.4.0",
+  version: "0.4.0-blaze-preview",
   git: "https://github.com/eventedmind/iron-dynamic-template"
 });
 
 Package.on_use(function (api) {
-  api.versionsFrom('METEOR@0.9.1');
+  api.versionsFrom('METEOR@0.9.0.1-blaze-preview');
 
   api.use('blaze');
   api.use('underscore');
