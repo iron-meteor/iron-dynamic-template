@@ -57,6 +57,10 @@
       "1.0.0"
     ],
     [
+      "reactive-var",
+      "1.0.0"
+    ],
+    [
       "templating",
       "1.0.4"
     ],
@@ -70,6 +74,6 @@
     ]
   ],
   "pluginDependencies": [],
-  "toolVersion": "meteor-tool@1.0.25",
+  "toolVersion": "meteor-tool@CHECKOUT",
   "format": "1.0"
 }

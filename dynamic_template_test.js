@@ -43,8 +43,7 @@ var withDiv = function (callback) {
 var withRenderedTemplate = function (template, callback) {
   withDiv(function (el) {
     template = _.isString(template) ? Template[template] : template;
-    var range = Blaze.render(template);
-    range.attach(el);
+    Blaze.render(template, el);
     Deps.flush();
     callback(el);
   });
@@ -285,7 +284,7 @@ Tinytest.add('DynamicTemplate - view lifecycle callbacks', function (test) {
   var tmpl = new Iron.DynamicTemplate({defaultTemplate: 'One'});
   var calls = [];
 
-  _.each(['onCreated', 'onMaterialized', 'onRendered', 'onDestroyed'], function (hook) {
+  _.each(['onViewCreated', 'onViewReady', '_onViewRendered', 'onViewDestroyed'], function (hook) {
     tmpl[hook](function (dynamicTemplate) {
       calls.push({
         name: hook,
@@ -299,26 +298,26 @@ Tinytest.add('DynamicTemplate - view lifecycle callbacks', function (test) {
   // UI.Component to be rendered.
   var call;
   withRenderedTemplate(tmpl.create(), function (el) {
-    test.equal(calls.length, 3, 'onCreated, onMaterialized and onRendered');
+    test.equal(calls.length, 3, 'onViewCreated, _onViewRendered and onViewReady');
 
     call = calls[0];
-    test.equal(call.name, 'onCreated');
+    test.equal(call.name, 'onViewCreated');
     test.instanceOf(call.dynamicTemplate, Iron.DynamicTemplate);
     test.instanceOf(call.thisArg, Blaze.View);
 
     call = calls[1];
-    test.equal(call.name, 'onMaterialized');
+    test.equal(call.name, '_onViewRendered');
     test.instanceOf(call.dynamicTemplate, Iron.DynamicTemplate);
     test.instanceOf(call.thisArg, Blaze.View);
 
     call = calls[2];
-    test.equal(call.name, 'onRendered');
+    test.equal(call.name, 'onViewReady');
     test.instanceOf(call.dynamicTemplate, Iron.DynamicTemplate);
     test.instanceOf(call.thisArg, Blaze.View);
 
     tmpl.destroy();
     call = calls[3];
-    test.equal(call.name, 'onDestroyed');
+    test.equal(call.name, 'onViewDestroyed');
     test.instanceOf(call.dynamicTemplate, Iron.DynamicTemplate);
     test.instanceOf(call.thisArg, Blaze.View);
   });
