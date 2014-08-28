@@ -1,7 +1,7 @@
-
 v0.4.0 / 2014-08-27
 ==================
   * Prepare for Blaze changes in 0.9.1
+  * fix package.js to use METEOR instead of METEOR-CORE
 
 v0.3.0 / 2014-08-12
 ==================
