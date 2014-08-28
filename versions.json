@@ -2,11 +2,11 @@
   "dependencies": [
     [
       "blaze",
-      "1.0.1"
+      "1.0.3"
     ],
     [
       "deps",
-      "1.0.0"
+      "1.0.1"
     ],
     [
       "ejson",
@@ -57,8 +57,12 @@
       "1.0.0"
     ],
     [
+      "reactive-var",
+      "1.0.0"
+    ],
+    [
       "templating",
-      "1.0.2"
+      "1.0.4"
     ],
     [
       "ui",
@@ -70,6 +74,6 @@
     ]
   ],
   "pluginDependencies": [],
-  "toolVersion": "meteor-tool@1.0.8",
+  "toolVersion": "meteor-tool@CHECKOUT",
   "format": "1.0"
 }
