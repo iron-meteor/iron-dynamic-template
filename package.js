@@ -1,16 +1,18 @@
 Package.describe({
   summary: 'Dynamically create and update templates and their data contexts.',
-  version: "0.3.0",
+  version: "0.4.0",
   git: "https://github.com/eventedmind/iron-dynamic-template"
 });
 
 Package.on_use(function (api) {
-  api.use('blaze@1.0.0');
-  api.use('underscore@1.0.0');
-  api.use('ui@1.0.0');
-  api.use('jquery@1.0.0');
-  api.use('deps@1.0.0');
-  api.use('templating@1.0.0');
+  api.versionsFrom('METEOR-CORE@0.9.1');
+
+  api.use('blaze');
+  api.use('underscore');
+  api.use('ui');
+  api.use('jquery');
+  api.use('deps');
+  api.use('templating');
 
   api.use('iron:core@0.3.2');
   api.imply('iron:core');
@@ -21,11 +23,11 @@ Package.on_use(function (api) {
 
 Package.on_test(function (api) {
   api.use('iron:dynamic-template');
-  api.use('templating@1.0.0');
-  api.use('tinytest@1.0.0');
-  api.use('test-helpers@1.0.0');
-  api.use('ui@1.0.0');
-  api.use('deps@1.0.0');
+  api.use('templating');
+  api.use('tinytest');
+  api.use('test-helpers');
+  api.use('blaze');
+  api.use('deps');
 
   api.add_files('dynamic_template_test.html', 'client');
   api.add_files('dynamic_template_test.js', 'client');

@@ -1,3 +1,8 @@
+
+v0.4.0 / 2014-08-27
+==================
+  * Prepare for Blaze changes in 0.9.1
+
 v0.3.0 / 2014-08-12
 ==================
   * bump iron:core dep version and add version conflict error
