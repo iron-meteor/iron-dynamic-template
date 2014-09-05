@@ -2,15 +2,15 @@
   "dependencies": [
     [
       "blaze",
-      "2.0.0-rc1"
+      "2.0.0"
     ],
     [
       "deps",
-      "1.0.2-rc1"
+      "1.0.2"
     ],
     [
       "ejson",
-      "1.0.1-rc0"
+      "1.0.1"
     ],
     [
       "geojson-utils",
@@ -26,7 +26,7 @@
     ],
     [
       "iron:core",
-      "0.3.3-rc0"
+      "0.3.4"
     ],
     [
       "jquery",
@@ -62,7 +62,7 @@
     ],
     [
       "templating",
-      "1.0.5-rc2"
+      "1.0.5"
     ],
     [
       "tracker",
@@ -70,7 +70,7 @@
     ],
     [
       "ui",
-      "1.0.1-rc0"
+      "1.0.1"
     ],
     [
       "underscore",
@@ -78,6 +78,6 @@
     ]
   ],
   "pluginDependencies": [],
-  "toolVersion": "meteor-tool@1.0.26",
+  "toolVersion": "meteor-tool@1.0.27",
   "format": "1.0"
 }
