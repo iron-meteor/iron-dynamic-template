@@ -26,12 +26,15 @@ DynamicTemplate = function (options) {
   this._defaultTemplate = options.defaultTemplate;
   this._content = options.content;
   this._data = options.data;
-  this._templateDep = new Deps.Dependency;
-  this._dataDep = new Deps.Dependency;
-  this._hasControllerDep = new Deps.Dependency;
+  this._templateDep = new Tracker.Dependency;
+  this._dataDep = new Tracker.Dependency;
+  this._hasControllerDep = new Tracker.Dependency;
   this._hooks = {};
-  this._controller = new Blaze.ReactiveVar; 
-  this.name = options.name || 'DynamicTemplate';
+  this._eventMap = null;
+  this._eventHandles = null;
+  this._eventThisArg = null;
+  this._controller = new ReactiveVar; 
+  this.name = options.name || this.constructor.name || 'DynamicTemplate';
 
   // has the Blaze.View been created?
   this.isCreated = false;
@@ -113,7 +116,7 @@ DynamicTemplate.prototype.create = function (options) {
   this.isCreated = true;
   this.isDestroyed = false;
 
-  var templateVar = Blaze.ReactiveVar(null);
+  var templateVar = ReactiveVar(null);
 
   var view = Blaze.View('DynamicTemplate', function () {
     var thisView = this;
@@ -188,10 +191,36 @@ DynamicTemplate.prototype.create = function (options) {
   view._onViewRendered(function () {
     // avoid inserting the view twice by accident.
     self.isInserted = true;
+
+    if (view.renderCount !== 1)
+      return;
+
+    self.events(self._eventMap, self._eventThisArg);
   });
+
+  view._templateInstance = new Blaze.TemplateInstance(view);
+  view.templateInstance = function () {
+    // Update data, firstNode, and lastNode, and return the TemplateInstance
+    // object.
+    var inst = view._templateInstance;
+
+    inst.data = Blaze.getData(view);
+
+    if (view._domrange && !view.isDestroyed) {
+      inst.firstNode = view._domrange.firstNode();
+      inst.lastNode = view._domrange.lastNode();
+    } else {
+      // on 'created' or 'destroyed' callbacks we don't have a DomRange
+      inst.firstNode = null;
+      inst.lastNode = null;
+    }
+
+    return inst;
+  };
 
   this.view = view;
   view.__dynamicTemplate__ = this;
+  //XXX change to this.constructor.name?
   view.name = this.name;
   return view;
 };
@@ -229,6 +258,96 @@ DynamicTemplate.prototype._runHooks = function (name, view) {
     // the callback teh dynamic template instance.
     hook.call(view, this);
   }
+};
+
+DynamicTemplate.prototype.events = function (eventMap, thisInHandler) {
+  var view = this.view;
+
+  var self = this;
+
+  this._detachEvents();
+  this._eventThisArg = thisInHandler;
+
+  var boundMap = this._eventMap = {};
+
+  for (var key in eventMap) {
+    boundMap[key] = (function (key, handler) {
+      return function (e) {
+        var tmplInstance = self.view.templateInstance();
+        return handler.call(thisInHandler || this, e, tmplInstance);
+      }
+    })(key, eventMap[key]);
+  }
+
+  var handles = this._eventHandles;
+  var attach = function (range, element) {
+    _.each(self._eventMap, function (handler, spec) {
+      var clauses = spec.split(/,\s+/);
+      // iterate over clauses of spec, e.g. ['click .foo', 'click .bar']
+      _.each(clauses, function (clause) {
+        var parts = clause.split(/\s+/);
+        if (parts.length === 0)
+          return;
+
+        var newEvents = parts.shift();
+        var selector = parts.join(' ');
+        handles.push(Blaze._EventSupport.listen(
+          element, newEvents, selector,
+          function (evt) {
+            if (! range.containsElement(evt.currentTarget))
+              return null;
+            var handlerThis = self._eventThisArg || this;
+            var handlerArgs = arguments;
+            return Blaze._withCurrentView(view, function () {
+              return handler.apply(handlerThis, handlerArgs);
+            });
+          },
+          range, function (r) {
+            return r.parentRange;
+          }));
+      });
+    });
+  };
+
+  if (view && view._domrange && view._domrange.attached) {
+    attach(view._domrange, view._domrange.parentElement);
+  } else if (view && view._domrange && !view._domrange.attached) {
+    view._domrange.onAttached(attach);
+  } 
+};
+
+DynamicTemplate.prototype._detachEvents = function () {
+  _.each(this._eventHandles, function (h) { h.stop(); });
+  this._eventHandles = [];
+};
+
+var attachEventMaps = function (range, element, eventMap, thisInHandler) {
+  _.each(eventMap, function (handler, spec) {
+    var clauses = spec.split(/,\s+/);
+    // iterate over clauses of spec, e.g. ['click .foo', 'click .bar']
+    _.each(clauses, function (clause) {
+      var parts = clause.split(/\s+/);
+      if (parts.length === 0)
+        return;
+
+      var newEvents = parts.shift();
+      var selector = parts.join(' ');
+      handles.push(Blaze._EventSupport.listen(
+        element, newEvents, selector,
+        function (evt) {
+          if (! range.containsElement(evt.currentTarget))
+            return null;
+          var handlerThis = thisInHandler || this;
+          var handlerArgs = arguments;
+          return Blaze._withCurrentView(view, function () {
+            return handler.apply(handlerThis, handlerArgs);
+          });
+        },
+        range, function (r) {
+          return r.parentRange;
+        }));
+    });
+  });
 };
 
 /**

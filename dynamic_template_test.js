@@ -322,3 +322,46 @@ Tinytest.add('DynamicTemplate - view lifecycle callbacks', function (test) {
     test.instanceOf(call.thisArg, Blaze.View);
   });
 });
+
+var calls = [];
+
+Template.EventsTest.events({
+  'click': function (e, tmpl) {
+  }
+});
+
+Tinytest.add('DynamicTemplate - event handlers', function (test) {
+  var tmpl = new Iron.DynamicTemplate({defaultTemplate: 'EventsTest'});
+
+  var calls = 0;
+  var thisArg = {};
+
+  // first test creating events before rendering
+  tmpl.events({
+    'click': function (e, tmpl) {
+      test.equal(this, thisArg);
+      test.isTrue(e);
+      test.isTrue(tmpl);
+      calls++;
+    }
+  }, thisArg);
+
+  withRenderedTemplate(tmpl.create(), function (el) {
+    var $target = $(el).find('.click');
+    $target.trigger('click');
+    test.equal(calls, 1);
+
+    // now change the events
+    tmpl.events({
+      'click': function (e, tmpl) {
+        test.isTrue(this.isNew);
+        test.isTrue(e);
+        test.isTrue(tmpl);
+        calls++;
+      }
+    }, {isNew: true});
+
+    $target.trigger('click');
+    test.equal(calls, 2);
+  });
+});
