@@ -195,7 +195,7 @@ DynamicTemplate.prototype.create = function (options) {
     if (view.renderCount !== 1)
       return;
 
-    self.events(self._eventMap, self._eventThisArg);
+    self._attachEvents();
   });
 
   view._templateInstance = new Blaze.TemplateInstance(view);
@@ -261,8 +261,6 @@ DynamicTemplate.prototype._runHooks = function (name, view) {
 };
 
 DynamicTemplate.prototype.events = function (eventMap, thisInHandler) {
-  var view = this.view;
-
   var self = this;
 
   this._detachEvents();
@@ -279,9 +277,26 @@ DynamicTemplate.prototype.events = function (eventMap, thisInHandler) {
     })(key, eventMap[key]);
   }
 
-  var handles = this._eventHandles;
+  this._attachEvents();
+};
+
+DynamicTemplate.prototype._attachEvents = function () {
+  var self = this;
+  var thisArg = self._eventThisArg;
+  var boundMap = self._eventMap;
+  var view = self.view;
+  var handles = self._eventHandles;
+
+  if (!view)
+    return;
+
+  var domrange = view._domrange;
+
+  if (!domrange)
+    throw new Error("no domrange");
+
   var attach = function (range, element) {
-    _.each(self._eventMap, function (handler, spec) {
+    _.each(boundMap, function (handler, spec) {
       var clauses = spec.split(/,\s+/);
       // iterate over clauses of spec, e.g. ['click .foo', 'click .bar']
       _.each(clauses, function (clause) {
@@ -309,11 +324,10 @@ DynamicTemplate.prototype.events = function (eventMap, thisInHandler) {
     });
   };
 
-  if (view && view._domrange && view._domrange.attached) {
-    attach(view._domrange, view._domrange.parentElement);
-  } else if (view && view._domrange && !view._domrange.attached) {
-    view._domrange.onAttached(attach);
-  } 
+  if (domrange.attached)
+    attach(domrange, domrange.parentElement);
+  else
+    domrange.onAttached(attach);
 };
 
 DynamicTemplate.prototype._detachEvents = function () {
