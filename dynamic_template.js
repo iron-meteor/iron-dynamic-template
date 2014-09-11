@@ -1,8 +1,9 @@
 /*****************************************************************************/
 /* Imports */
 /*****************************************************************************/
-debug = Iron.utils.debug('iron:dynamic-template');
-camelCase = Iron.utils.camelCase;
+var debug = Iron.utils.debug('iron:dynamic-template');
+var assert = Iron.utils.assert;
+var camelCase = Iron.utils.camelCase;
 
 /*****************************************************************************/
 /* Helpers */
@@ -225,6 +226,14 @@ DynamicTemplate.prototype.create = function (options) {
 
   this.view = view;
   view.__dynamicTemplate__ = this;
+
+  var controller = Deps.nonreactive(function () {
+    return self.getController();
+  });
+
+  if (controller)
+    DynamicTemplate.registerLookupHost(view, controller);
+
   //XXX change to this.constructor.name?
   view.name = this.name;
   return view;
@@ -410,6 +419,11 @@ DynamicTemplate.prototype.setController = function (controller) {
   if (didHaveController !== this._hasController)
     this._hasControllerDep.changed();
 
+  // this will not invalidate an existing view so this lookup host
+  // will only be looked up on subsequent renderings.
+  if (this.view)
+    DynamicTemplate.registerLookupHost(this.view, controller);
+
   return this._controller.set(controller);
 };
 
@@ -502,6 +516,30 @@ DynamicTemplate.args = function (view) {
  */
 DynamicTemplate.extend = function (props) {
   return Iron.utils.extend(this, props);
+};
+
+/**
+ * Register a lookupHost for a view. This allows components and controllers
+ * to participate in the Blaze.prototype.lookup chain.
+ */
+DynamicTemplate.registerLookupHost = function (target, host) {
+  assert(typeof target == 'object', 'registerLookupHost requires the target to be an object');
+  assert(typeof host == 'object', 'registerLookupHost requires the host to be an object');
+  target.__lookupHost__ = host;
+};
+
+/**
+ * Returns true if the target is a lookup host and false otherwise.
+ */
+DynamicTemplate.isLookupHost = function (target) {
+  return !!(target && target.__lookupHost__);
+};
+
+/*
+ * Returns the lookup host for the target or undefined if it doesn't exist.
+ */
+DynamicTemplate.getLookupHost = function (target) {
+  return target && target.__lookupHost__;
 };
 
 /*****************************************************************************/

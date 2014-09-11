@@ -21,6 +21,7 @@ Package.on_use(function (api) {
   api.add_files('version_conflict_error.js');
   api.add_files('dynamic_template.html');
   api.add_files('dynamic_template.js');
+  api.add_files('blaze_overrides.js');
 });
 
 Package.on_test(function (api) {
