@@ -19,6 +19,7 @@ Package.on_use(function (api) {
   api.imply('iron:core');
 
   api.add_files('version_conflict_error.js');
+  api.add_files('dynamic_template.html');
   api.add_files('dynamic_template.js');
 });
 

@@ -157,8 +157,13 @@ DynamicTemplate.prototype.create = function (options) {
           // a camelCase version of the template.
           tmpl = Template[camelCase(template)];
 
-        if (!tmpl)
-          throw new Error("Couldn't find a template named " + JSON.stringify(template) + " or " + JSON.stringify(camelCase(template))+ ". Are you sure you defined it?");
+        if (!tmpl) {
+          tmpl = Blaze.With({
+            msg: "Couldn't find a template named " + JSON.stringify(template) + " or " + JSON.stringify(camelCase(template))+ ". Are you sure you defined it?"
+          }, function () {
+            return Template.__DynamicTemplateError__;
+          });
+        }
       } else if (typeOf(template) === '[object Object]') {
         // or maybe a view already?
         tmpl = template;
