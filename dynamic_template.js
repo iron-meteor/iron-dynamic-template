@@ -6,9 +6,9 @@ var assert = Iron.utils.assert;
 var camelCase = Iron.utils.camelCase;
 
 /*****************************************************************************/
-/* Helpers */
+/* Private */
 /*****************************************************************************/
-typeOf = function (value) {
+var typeOf = function (value) {
   return Object.prototype.toString.call(value);
 };
 
@@ -556,6 +556,25 @@ if (typeof Template !== 'undefined') {
       content: this.templateContentBlock
     }).create();
   }));
+
+  /**
+   * Find a lookup host with a state key and return it reactively if we have
+   * it.
+   */
+  UI.registerHelper('get', function (key) {
+    var view = Blaze.getView();
+    var host;
+
+    while (view) {
+      if (host = DynamicTemplate.getLookupHost(view)) {
+        return host.state && host.state.get(key);
+      } else {
+        view = view.parentView;
+      }
+    }
+
+    return undefined;
+  });
 }
 
 /*****************************************************************************/
