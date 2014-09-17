@@ -1,6 +1,6 @@
 Package.describe({
   summary: 'Dynamically create and update templates and their data contexts.',
-  version: "1.0.0-pre1",
+  version: "1.0.0-pre2",
   git: "https://github.com/eventedmind/iron-dynamic-template"
 });
 
@@ -15,7 +15,7 @@ Package.on_use(function (api) {
   api.use('reactive-var');
   api.use('templating');
 
-  api.use('iron:core@1.0.0-pre1');
+  api.use('iron:core@1.0.0-pre2');
   api.imply('iron:core');
 
   api.add_files('version_conflict_error.js');
