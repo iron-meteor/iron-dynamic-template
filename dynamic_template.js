@@ -285,8 +285,10 @@ DynamicTemplate.prototype.events = function (eventMap, thisInHandler) {
   for (var key in eventMap) {
     boundMap[key] = (function (key, handler) {
       return function (e) {
+        var data = Blaze.getData(e.currentTarget);
+        if (data == null) data = {};
         var tmplInstance = self.view.templateInstance();
-        return handler.call(thisInHandler || this, e, tmplInstance);
+        return handler.call(thisInHandler || this, e, tmplInstance, data);
       }
     })(key, eventMap[key]);
   }

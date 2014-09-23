@@ -37,7 +37,8 @@ Blaze.View.prototype.lookup = function (name /*, args */) {
   if (lookupHost) {
     return function callLookupHostProperty (/* args */) {
       var val = lookupHost[name];
-      return (typeof val === 'function') ? val.apply(lookupHost, arguments) : val;
+      var args = [].slice.call(arguments);
+      return (typeof val === 'function') ? val.apply(lookupHost, args) : val;
     }
   } else {
     return origLookup.apply(this, arguments);
