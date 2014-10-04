@@ -2,24 +2,7 @@
 /* Imports */
 /*****************************************************************************/
 var assert = Iron.utils.assert;
-
-/*****************************************************************************/
-/* Private */
-/*****************************************************************************/
-findFirstLookupHostWithProperty = function (view, prop) {
-  assert(view instanceof Blaze.View, "view must be a Blaze.View");
-
-  var host;
-
-  while (view) {
-    if ((host = DynamicTemplate.getLookupHost(view)) && host[prop])
-      return host;
-    else
-      view = view.parentView;
-  }
-
-  return undefined;
-};
+var get = Meteor._get;
 
 /*****************************************************************************/
 /* Blaze Overrides */
@@ -33,12 +16,13 @@ findFirstLookupHostWithProperty = function (view, prop) {
  */
 var origLookup = Blaze.View.prototype.lookup;
 Blaze.View.prototype.lookup = function (name /*, args */) {
-  var lookupHost = findFirstLookupHostWithProperty(Blaze.getView(), name);
-  if (lookupHost) {
-    return function callLookupHostProperty (/* args */) {
-      var val = lookupHost[name];
+  var host = DynamicTemplate.findLookupHostWithHelper(Blaze.getView(), name);
+
+  if (host) {
+    return function callLookupHostHelper (/* args */) {
+      var helper = get(host, 'constructor', '_helpers', name);
       var args = [].slice.call(arguments);
-      return (typeof val === 'function') ? val.apply(lookupHost, args) : val;
+      return (typeof helper === 'function') ? helper.apply(host, args) : helper;
     }
   } else {
     return origLookup.apply(this, arguments);

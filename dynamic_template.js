@@ -3,6 +3,7 @@
 /*****************************************************************************/
 var debug = Iron.utils.debug('iron:dynamic-template');
 var assert = Iron.utils.assert;
+var get = Meteor._get;
 var camelCase = Iron.utils.camelCase;
 
 /*****************************************************************************/
@@ -29,12 +30,13 @@ DynamicTemplate = function (options) {
   this._data = options.data;
   this._templateDep = new Tracker.Dependency;
   this._dataDep = new Tracker.Dependency;
-  this._hasControllerDep = new Tracker.Dependency;
+
+  this._lookupHost = new ReactiveVar(null);
+
   this._hooks = {};
   this._eventMap = null;
   this._eventHandles = null;
   this._eventThisArg = null;
-  this._controller = new ReactiveVar; 
   this.name = options.name || this.constructor.name || 'DynamicTemplate';
 
   // has the Blaze.View been created?
@@ -45,7 +47,7 @@ DynamicTemplate = function (options) {
 };
 
 /**
- * Get or set the template. 
+ * Get or set the template.
  */
 DynamicTemplate.prototype.template = function (value) {
   if (arguments.length === 1 && value !== this._template) {
@@ -169,7 +171,7 @@ DynamicTemplate.prototype.create = function (options) {
         // or maybe a view already?
         tmpl = template;
       } else if (typeof self._content !== 'undefined') {
-        // or maybe its block content like 
+        // or maybe its block content like
         // {{#DynamicTemplate}}
         //  Some block
         // {{/DynamicTemplate}}
@@ -226,15 +228,6 @@ DynamicTemplate.prototype.create = function (options) {
 
   this.view = view;
   view.__dynamicTemplate__ = this;
-
-  var controller = Deps.nonreactive(function () {
-    return self.getController();
-  });
-
-  if (controller)
-    DynamicTemplate.registerLookupHost(view, controller);
-
-  //XXX change to this.constructor.name?
   view.name = this.name;
   return view;
 };
@@ -405,36 +398,20 @@ DynamicTemplate.prototype.insert = function (options) {
 };
 
 /**
- * Reactively return the value of the current controller.
+ * Reactively return the value of the current lookup host or null if there
+ * is no lookup host.
  */
-DynamicTemplate.prototype.getController = function () {
-  return this._controller.get();
+DynamicTemplate.prototype._getLookupHost = function () {
+  return this._lookupHost.get();
 };
 
 /**
- * Set the reactive value of the controller.
+ * Set the reactive value of the lookup host.
+ *
  */
-DynamicTemplate.prototype.setController = function (controller) {
-  var didHaveController = !!this._hasController;
-  this._hasController = (typeof controller !== 'undefined');
-
-  if (didHaveController !== this._hasController)
-    this._hasControllerDep.changed();
-
-  // this will not invalidate an existing view so this lookup host
-  // will only be looked up on subsequent renderings.
-  if (this.view)
-    DynamicTemplate.registerLookupHost(this.view, controller);
-
-  return this._controller.set(controller);
-};
-
-/**
- * Reactively returns true if the template has a controller and false otherwise.
- */
-DynamicTemplate.prototype.hasController = function () {
-  this._hasControllerDep.depend();
-  return this._hasController;
+DynamicTemplate.prototype._setLookupHost = function (host) {
+  this._lookupHost.set(host);
+  return this;
 };
 
 /*****************************************************************************/
@@ -520,34 +497,71 @@ DynamicTemplate.extend = function (props) {
   return Iron.utils.extend(this, props);
 };
 
-/**
- * Register a lookupHost for a view. This allows components and controllers
- * to participate in the Blaze.prototype.lookup chain.
- */
-DynamicTemplate.registerLookupHost = function (target, host) {
-  assert(typeof target == 'object', 'registerLookupHost requires the target to be an object');
-  assert(typeof host == 'object', 'registerLookupHost requires the host to be an object');
-  target.__lookupHost__ = host;
+DynamicTemplate.findFirstLookupHost = function (view) {
+  var host;
+  var helper;
+  assert(view instanceof Blaze.View, "view must be a Blaze.View");
+  while (view) {
+    if (view.__dynamicTemplate__) {
+      // create a dependency even if the host is null so that if a host
+      // gets set at a later time, helpers rerun.
+      host = view.__dynamicTemplate__._getLookupHost();
+      if (host) return host;
+    } else {
+      view = view.parentView;
+    }
+  }
+
+  return undefined;
 };
 
-/**
- * Returns true if the target is a lookup host and false otherwise.
- */
-DynamicTemplate.isLookupHost = function (target) {
-  return !!(target && target.__lookupHost__);
+DynamicTemplate.findLookupHostWithProperty = function (view, key) {
+  var host;
+  var prop;
+  assert(view instanceof Blaze.View, "view must be a Blaze.View");
+  while (view) {
+    if (view.__dynamicTemplate__) {
+      // create a dependency even if the host is null so that if a host
+      // gets set at a later time, helpers rerun.
+      host = view.__dynamicTemplate__._getLookupHost();
+
+      if (host) {
+        prop = get(host, key);
+        if (prop) return host;
+      }
+    } 
+    
+    view = view.parentView;
+  }
+
+  return undefined;
 };
 
-/*
- * Returns the lookup host for the target or undefined if it doesn't exist.
- */
-DynamicTemplate.getLookupHost = function (target) {
-  return target && target.__lookupHost__;
+DynamicTemplate.findLookupHostWithHelper = function (view, helperKey) {
+  var host;
+  var helper;
+  assert(view instanceof Blaze.View, "view must be a Blaze.View");
+  while (view) {
+    if (view.__dynamicTemplate__) {
+      // create a dependency even if the host is null so that if a host
+      // gets set at a later time, helpers rerun.
+      host = view.__dynamicTemplate__._getLookupHost();
+
+      if (host) {
+        helper = get(host, 'constructor', '_helpers', helperKey);
+        if (helper) return host;
+      }
+    } 
+    
+    view = view.parentView;
+  }
+
+  return undefined;
 };
 
 /*****************************************************************************/
 /* UI Helpers */
 /*****************************************************************************/
-
 if (typeof Template !== 'undefined') {
   UI.registerHelper('DynamicTemplate', new Template('DynamicTemplateHelper', function () {
     var args = DynamicTemplate.args(this);
@@ -565,17 +579,9 @@ if (typeof Template !== 'undefined') {
    */
   UI.registerHelper('get', function (key) {
     var view = Blaze.getView();
-    var host;
-
-    while (view) {
-      if (host = DynamicTemplate.getLookupHost(view)) {
-        return host.state && host.state.get(key);
-      } else {
-        view = view.parentView;
-      }
-    }
-
-    return undefined;
+    var host = DynamicTemplate.findFirstLookupHost();
+    var state = get(host, 'state');
+    return state ? state.get(key) : undefined;
   });
 }
 

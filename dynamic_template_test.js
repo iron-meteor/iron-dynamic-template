@@ -365,3 +365,34 @@ Tinytest.add('DynamicTemplate - event handlers', function (test) {
     test.equal(calls, 2);
   });
 });
+
+
+Tinytest.add('DynamicTemplate - lookup hosts', function (test) {
+  var tmpl = new Iron.DynamicTemplate({template: 'LookupHostTest'});
+  var counter = 0;
+  var helperRunCount = 0;
+
+  var Controller = function () {
+    this.counter = ++counter;
+  };
+
+  Controller._helpers = {};
+  Controller._helpers.getValue = function () {
+    helperRunCount++;
+    return this.counter;
+  };
+
+  withRenderedTemplate(tmpl.create(), function (el) {
+    tmpl._setLookupHost(new Controller);
+    Deps.flush();
+    test.equal(counter, 1);
+    test.equal(helperRunCount, 1);
+    test.equal(el.innerHTML.compact(), '1');
+
+    tmpl._setLookupHost(new Controller);
+    Deps.flush();
+    test.equal(counter, 2);
+    test.equal(helperRunCount, 2);
+    test.equal(el.innerHTML.compact(), '2');
+  });
+});
