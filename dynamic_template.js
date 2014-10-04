@@ -145,40 +145,7 @@ DynamicTemplate.prototype.create = function (options) {
         // return the first parent data context that is not inclusion arguments
         return DynamicTemplate.getParentDataContext(thisView);
     }, function () {
-      // NOTE: When DynamicTemplate is used from a template inclusion helper
-      // like this {{> DynamicTemplate template=getTemplate data=getData}} the
-      // function below will rerun any time the getData function invalidates the
-      // argument data computation.
-      var tmpl = null;
-
-      // is it a template name like "MyTemplate"?
-      if (typeof template === 'string') {
-        tmpl = Template[template];
-
-        if (!tmpl)
-          // as a fallback double check the user didn't actually define
-          // a camelCase version of the template.
-          tmpl = Template[camelCase(template)];
-
-        if (!tmpl) {
-          tmpl = Blaze.With({
-            msg: "Couldn't find a template named " + JSON.stringify(template) + " or " + JSON.stringify(camelCase(template))+ ". Are you sure you defined it?"
-          }, function () {
-            return Template.__DynamicTemplateError__;
-          });
-        }
-      } else if (typeOf(template) === '[object Object]') {
-        // or maybe a view already?
-        tmpl = template;
-      } else if (typeof self._content !== 'undefined') {
-        // or maybe its block content like
-        // {{#DynamicTemplate}}
-        //  Some block
-        // {{/DynamicTemplate}}
-        tmpl = self._content;
-      }
-
-      return tmpl;
+      return self.renderView(template);
     });
   });
 
@@ -230,6 +197,43 @@ DynamicTemplate.prototype.create = function (options) {
   view.__dynamicTemplate__ = this;
   view.name = this.name;
   return view;
+};
+
+DynamicTemplate.prototype.renderView = function (template) {
+  // NOTE: When DynamicTemplate is used from a template inclusion helper
+  // like this {{> DynamicTemplate template=getTemplate data=getData}} the
+  // function below will rerun any time the getData function invalidates the
+  // argument data computation.
+  var tmpl = null;
+
+  // is it a template name like "MyTemplate"?
+  if (typeof template === 'string') {
+    tmpl = Template[template];
+
+    if (!tmpl)
+      // as a fallback double check the user didn't actually define
+      // a camelCase version of the template.
+      tmpl = Template[camelCase(template)];
+
+    if (!tmpl) {
+      tmpl = Blaze.With({
+        msg: "Couldn't find a template named " + JSON.stringify(template) + " or " + JSON.stringify(camelCase(template))+ ". Are you sure you defined it?"
+      }, function () {
+        return Template.__DynamicTemplateError__;
+      });
+    }
+  } else if (typeOf(template) === '[object Object]') {
+    // or maybe a view already?
+    tmpl = template;
+  } else if (typeof self._content !== 'undefined') {
+    // or maybe its block content like
+    // {{#DynamicTemplate}}
+    //  Some block
+    // {{/DynamicTemplate}}
+    tmpl = self._content;
+  }
+
+  return tmpl;
 };
 
 /**
@@ -423,9 +427,13 @@ DynamicTemplate.prototype._setLookupHost = function (host) {
  * (see above function). Note: This function can create reactive dependencies.
  */
 DynamicTemplate.getParentDataContext = function (view) {
-  // start off with the parent.
-  view = view.parentView;
+  return DynamicTemplate.getDataContext(view && view.parentView);
+};
 
+/**
+ * Get the first data context that is not inclusion arguments.
+ */
+DynamicTemplate.getDataContext = function (view) {
   while (view) {
     if (view.name === 'with' && !view.__isTemplateWith)
       return view.dataVar.get();
@@ -435,7 +443,6 @@ DynamicTemplate.getParentDataContext = function (view) {
 
   return null;
 };
-
 
 /**
  * Get inclusion arguments, if any, from a view.
@@ -572,17 +579,6 @@ if (typeof Template !== 'undefined') {
       content: this.templateContentBlock
     }).create();
   }));
-
-  /**
-   * Find a lookup host with a state key and return it reactively if we have
-   * it.
-   */
-  UI.registerHelper('get', function (key) {
-    var view = Blaze.getView();
-    var host = DynamicTemplate.findFirstLookupHost();
-    var state = get(host, 'state');
-    return state ? state.get(key) : undefined;
-  });
 }
 
 /*****************************************************************************/
