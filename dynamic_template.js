@@ -513,12 +513,8 @@ DynamicTemplate.findFirstLookupHost = function (view) {
   assert(view instanceof Blaze.View, "view must be a Blaze.View");
   while (view) {
     if (view.__dynamicTemplate__) {
-      // create a dependency even if the host is null so that if a host
-      // gets set at a later time, helpers rerun.
-      host = Deps.nonreactive(function () {
-        return view.__dynamicTemplate__._getLookupHost();
-      });
-
+      // creates a reactive dependency.
+      var host = view.__dynamicTemplate__._getLookupHost();
       if (host) return host;
     } else {
       view = view.parentView;
@@ -535,9 +531,8 @@ DynamicTemplate.findLookupHostWithProperty = function (view, key) {
   while (view) {
     if (view.__dynamicTemplate__) {
 
-      var host = Deps.nonreactive(function () {
-        return view.__dynamicTemplate__._getLookupHost();
-      });
+      // creates a reactive dependency
+      var host = view.__dynamicTemplate__._getLookupHost();
 
       // create a dependency even if the host is null so that if a host
       // gets set at a later time, helpers rerun.
