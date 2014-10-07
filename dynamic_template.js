@@ -3,7 +3,7 @@
 /*****************************************************************************/
 var debug = Iron.utils.debug('iron:dynamic-template');
 var assert = Iron.utils.assert;
-var get = Meteor._get;
+var get = Iron.utils.get;
 var camelCase = Iron.utils.camelCase;
 
 /*****************************************************************************/
@@ -23,6 +23,7 @@ var typeOf = function (value) {
  *
  */
 DynamicTemplate = function (options) {
+  this._id = Random.id(); 
   this.options = options = options || {};
   this._template = options.template;
   this._defaultTemplate = options.defaultTemplate;
@@ -200,6 +201,8 @@ DynamicTemplate.prototype.create = function (options) {
 };
 
 DynamicTemplate.prototype.renderView = function (template) {
+  var self = this;
+
   // NOTE: When DynamicTemplate is used from a template inclusion helper
   // like this {{> DynamicTemplate template=getTemplate data=getData}} the
   // function below will rerun any time the getData function invalidates the
@@ -405,7 +408,7 @@ DynamicTemplate.prototype.insert = function (options) {
  * Reactively return the value of the current lookup host or null if there
  * is no lookup host.
  */
-DynamicTemplate.prototype._getLookupHost = function () {
+DynamicTemplate.prototype._getLookupHost = function (opts) {
   return this._lookupHost.get();
 };
 
@@ -512,7 +515,10 @@ DynamicTemplate.findFirstLookupHost = function (view) {
     if (view.__dynamicTemplate__) {
       // create a dependency even if the host is null so that if a host
       // gets set at a later time, helpers rerun.
-      host = view.__dynamicTemplate__._getLookupHost();
+      host = Deps.nonreactive(function () {
+        return view.__dynamicTemplate__._getLookupHost();
+      });
+
       if (host) return host;
     } else {
       view = view.parentView;
@@ -528,13 +534,17 @@ DynamicTemplate.findLookupHostWithProperty = function (view, key) {
   assert(view instanceof Blaze.View, "view must be a Blaze.View");
   while (view) {
     if (view.__dynamicTemplate__) {
+
+      var host = Deps.nonreactive(function () {
+        return view.__dynamicTemplate__._getLookupHost();
+      });
+
       // create a dependency even if the host is null so that if a host
       // gets set at a later time, helpers rerun.
-      host = view.__dynamicTemplate__._getLookupHost();
 
-      if (host) {
-        prop = get(host, key);
-        if (prop) return host;
+      if (host && get(host, key)) {
+        // now we'll establish a reactive dependency
+        return host;
       }
     } 
     
@@ -544,19 +554,22 @@ DynamicTemplate.findLookupHostWithProperty = function (view, key) {
   return undefined;
 };
 
+/**
+ * Note: Only establishes a reactive dependency on the host changing
+ * if the host with the given property is actually found.
+ */
 DynamicTemplate.findLookupHostWithHelper = function (view, helperKey) {
   var host;
   var helper;
   assert(view instanceof Blaze.View, "view must be a Blaze.View");
   while (view) {
     if (view.__dynamicTemplate__) {
-      // create a dependency even if the host is null so that if a host
-      // gets set at a later time, helpers rerun.
-      host = view.__dynamicTemplate__._getLookupHost();
+      var host = Deps.nonreactive(function () {
+        return view.__dynamicTemplate__._getLookupHost();
+      });
 
-      if (host) {
-        helper = get(host, 'constructor', '_helpers', helperKey);
-        if (helper) return host;
+      if (host && get(host, 'constructor', '_helpers', helperKey)) {
+        return view.__dynamicTemplate__._getLookupHost();
       }
     } 
     
