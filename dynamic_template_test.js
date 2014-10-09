@@ -76,6 +76,14 @@ Template.DynamicParentData.helpers({
   }
 });
 
+
+Template.DynamicParentDataOnTemplateDynamic.helpers({
+  getData: function () {
+    var res = reactiveData.get();
+    return res;
+  }
+});
+
 Template.DynamicWithBlock.helpers({
   getTemplate: function () {
     // like session.get
@@ -166,6 +174,47 @@ Tinytest.add('DynamicTemplate - Rendering with dynamic parent data', function (t
   reactiveData._value = 'init';
 
   withRenderedTemplate('DynamicParentData', function (el) {
+    // we've rendered the template to the page
+    test.equal(renderCount, 1);
+
+    // but no data yet
+    test.equal(el.innerHTML.compact(), 'WithData-init');
+
+    // now set the data
+    reactiveData.set('1');
+    Deps.flush();
+
+    // should not re-render
+    test.equal(renderCount, 1);
+
+    // but data should be updated
+    test.equal(el.innerHTML.compact(), 'WithData-1');
+
+    // now set the data again
+    reactiveData.set('2');
+    Deps.flush();
+
+    // should not re-render
+    test.equal(renderCount, 1);
+
+    // but data should be updated
+    test.equal(el.innerHTML.compact(), 'WithData-2');
+
+    reactiveData.clear();
+  });
+});
+
+
+Tinytest.add('DynamicTemplate - Rendering with dynamic parent data from Template.dynamic', function (test) {
+  var renderCount = 0;
+  Template.WithData.rendered = function () {
+    renderCount++;
+  };
+
+  // star the data value off as an empty string so the template still renders
+  reactiveData._value = 'init';
+
+  withRenderedTemplate('DynamicParentDataOnTemplateDynamic', function (el) {
     // we've rendered the template to the page
     test.equal(renderCount, 1);
 
