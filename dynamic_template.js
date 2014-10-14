@@ -38,7 +38,7 @@ DynamicTemplate = function (options) {
   this._eventMap = null;
   this._eventHandles = null;
   this._eventThisArg = null;
-  this.name = options.name || this.constructor.name || 'DynamicTemplate';
+  this.name = options.name || this.constructor.prototype.name || 'DynamicTemplate';
 
   // has the Blaze.View been created?
   this.isCreated = false;
@@ -329,6 +329,8 @@ DynamicTemplate.prototype._attachEvents = function () {
               return null;
             var handlerThis = self._eventThisArg || this;
             var handlerArgs = arguments;
+            //XXX which view should this be? What if the event happened
+            //somwhere down the hierarchy?
             return Blaze._withCurrentView(view, function () {
               return handler.apply(handlerThis, handlerArgs);
             });
