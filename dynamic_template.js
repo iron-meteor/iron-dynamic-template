@@ -32,7 +32,8 @@ DynamicTemplate = function (options) {
   this._templateDep = new Tracker.Dependency;
   this._dataDep = new Tracker.Dependency;
 
-  this._lookupHost = new ReactiveVar(null);
+  this._lookupHostDep = new Tracker.Dependency;
+  this._lookupHostValue = null;
 
   this._hooks = {};
   this._eventMap = null;
@@ -410,8 +411,8 @@ DynamicTemplate.prototype.insert = function (options) {
  * Reactively return the value of the current lookup host or null if there
  * is no lookup host.
  */
-DynamicTemplate.prototype._getLookupHost = function (opts) {
-  return this._lookupHost.get();
+DynamicTemplate.prototype._getLookupHost = function () {
+  return this._lookupHostValue;
 };
 
 /**
@@ -419,7 +420,20 @@ DynamicTemplate.prototype._getLookupHost = function (opts) {
  *
  */
 DynamicTemplate.prototype._setLookupHost = function (host) {
-  this._lookupHost.set(host);
+  var self = this;
+
+  if (self._lookupHostValue !== host) {
+    self._lookupHostValue = host;
+    Deps.afterFlush(function () {
+      // if the lookup host changes and the template also changes
+      // before the next flush cycle, this gives the new template
+      // a chance to render, and the old template to be torn off
+      // the page (including stopping its computation) before the
+      // lookupHostDep is changed.
+      self._lookupHostDep.changed();
+    });
+  }
+
   return this;
 };
 
