@@ -16,7 +16,6 @@ var get = Iron.utils.get;
  */
 var origLookup = Blaze.View.prototype.lookup;
 Blaze.View.prototype.lookup = function (name /*, args */) {
-  // this only creates a reactive dependency if the host is found.
   var host = DynamicTemplate.findLookupHostWithHelper(Blaze.getView(), name);
 
   if (host) {

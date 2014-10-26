@@ -382,57 +382,17 @@ Tinytest.add('DynamicTemplate - lookup hosts', function (test) {
     return this.counter;
   };
 
-  // set the controller before we render so that a reactive
-  // dependency gets created
-  tmpl._setLookupHost(new Controller);
 
+  // start off with no controller at the time of render
   withRenderedTemplate(tmpl.create(), function (el) {
-    test.equal(counter, 1);
-    test.equal(helperRunCount, 1);
-    test.equal(el.innerHTML.compact(), '1');
-
+    // then add a controller
     tmpl._setLookupHost(new Controller);
+
     Deps.flush();
-    test.equal(counter, 2);
-    test.equal(helperRunCount, 2);
-    test.equal(el.innerHTML.compact(), '2');
-  });
-});
-
-/**
- * A reactive dep is only created on lookup host changes where the property
- * was actually found on a host lookup.
- */
-Tinytest.add('DynamicTemplate - lookup host dependencies', function (test) {
-  var tmpl = new Iron.DynamicTemplate({template: 'LookupHostDepTest'});
-
-  var counts = {
-    template: 0,
-    host: 0
-  };
-
-  Template.LookupHostDepTest.helpers({
-    getValueFromTemplate: function () {
-      counts.template++;
-      return 'template'
-    }
-  });
-
-  var Controller = function () {};
-  Controller._helpers = {};
-  Controller._helpers.getValueFromHost = function () {
-    counts.host++;
-    return 'host'
-  };
-
-  tmpl._setLookupHost(new Controller);
-  withRenderedTemplate(tmpl.create(), function (el) {
-    test.equal(counts.host, 1, "host helper should only have run once");
-    test.equal(counts.template, 1, "template helper should not rerun");
-
-    tmpl._setLookupHost(new Controller);
-    Deps.flush();
-    test.equal(counts.host, 2, "host helper should rerun");
-    test.equal(counts.template, 1, "template helper should not rerun");
+    Deps.afterFlush(function () {
+      test.equal(counter, 1);
+      test.equal(helperRunCount, 1);
+      test.equal(el.innerHTML.compact(), '1');
+    });
   });
 });
