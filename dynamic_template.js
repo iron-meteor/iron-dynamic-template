@@ -412,6 +412,7 @@ DynamicTemplate.prototype.insert = function (options) {
  * is no lookup host.
  */
 DynamicTemplate.prototype._getLookupHost = function () {
+  this._lookupHostDep.depend();
   return this._lookupHostValue;
 };
 
