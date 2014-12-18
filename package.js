@@ -1,6 +1,6 @@
 Package.describe({
   summary: 'Dynamically create and update templates and their data contexts.',
-  version: "1.0.4",
+  version: "1.0.5",
   git: "https://github.com/eventedmind/iron-dynamic-template"
 });
 
