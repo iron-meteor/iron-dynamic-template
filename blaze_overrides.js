@@ -18,12 +18,7 @@ var origLookup = Blaze.View.prototype.lookup;
 Blaze.View.prototype.lookup = function (name /*, args */) {
   var host;
 
-  //XXX hack to not create a dependency on a lookup host for yield and
-  //    contentFor lookups. But any other lookups will create a dependency
-  //    and re-render. If we don't create this dependency, then we can't use
-  //    helpers on controllers.
-  if (name !== 'yield' && name !== 'contentFor')
-    host = DynamicTemplate.findLookupHostWithHelper(Blaze.getView(), name);
+  host = DynamicTemplate.findLookupHostWithHelper(Blaze.getView(), name);
 
   if (host) {
     return function callLookupHostHelper (/* args */) {
