@@ -412,7 +412,9 @@ DynamicTemplate.prototype.insert = function (options) {
  * is no lookup host.
  */
 DynamicTemplate.prototype._getLookupHost = function () {
-  this._lookupHostDep.depend();
+  // XXX this is called from the Blaze overrides so we can't create a dep
+  // here for every single lookup. Will revisit.
+  //this._lookupHostDep.depend();
   return this._lookupHostValue;
 };
 
