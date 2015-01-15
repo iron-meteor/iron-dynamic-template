@@ -175,6 +175,12 @@ DynamicTemplate.prototype.create = function (options) {
     self._attachEvents();
   });
 
+  view.onViewDestroyed(function () {
+    // clean up the event handlers if
+    // the view is destroyed
+    self._detachEvents();
+  });
+
   view._templateInstance = new Blaze.TemplateInstance(view);
   view.templateInstance = function () {
     // Update data, firstNode, and lastNode, and return the TemplateInstance
