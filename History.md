@@ -1,7 +1,6 @@
-
-n.n.n / 2015-01-15
+v0.4.1 / 2015-01-15
 ==================
-
+  * fix event handler leak by detaching event handlers on destroyed views
 
 v0.4.0 / 2014-08-27
 ==================
