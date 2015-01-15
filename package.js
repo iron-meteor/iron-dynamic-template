@@ -16,7 +16,7 @@ Package.on_use(function (api) {
   api.use('templating');
   api.use('random');
 
-  api.use('iron:core@1.0.6');
+  api.use('iron:core@1.0.7');
   api.imply('iron:core');
 
   api.add_files('version_conflict_error.js');
