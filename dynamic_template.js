@@ -121,7 +121,7 @@ DynamicTemplate.prototype.create = function (options) {
   this.isCreated = true;
   this.isDestroyed = false;
 
-  var templateVar = ReactiveVar(null);
+  var templateVar = ReactiveVar(null, function (a, b) {return a === b});
 
   var view = Blaze.View('DynamicTemplate', function () {
     var thisView = this;
