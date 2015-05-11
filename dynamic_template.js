@@ -218,12 +218,29 @@ DynamicTemplate.prototype.renderView = function (template) {
 
   // is it a template name like "MyTemplate"?
   if (typeof template === 'string') {
-    tmpl = Template[template];
+    if (Blaze._getTemplate) {
+      tmpl = Blaze._getTemplate(template, function () {
+        return Template.instance();
+      });
+    }
+    else {
+      // Backwards compatibility for Meteor < 1.2.
+      tmpl = Template[template];
+    }
 
-    if (!tmpl)
+    if (!tmpl) {
       // as a fallback double check the user didn't actually define
       // a camelCase version of the template.
-      tmpl = Template[camelCase(template)];
+      if (Blaze._getTemplate) {
+        tmpl = Blaze._getTemplate(camelCase(template), function () {
+          return Template.instance();
+        });
+      }
+      else {
+        // Backwards compatibility for Meteor < 1.2.
+        tmpl = Template[camelCase(template)];
+      }
+    }
 
     if (!tmpl) {
       tmpl = Blaze.With({
