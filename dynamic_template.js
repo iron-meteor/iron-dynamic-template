@@ -220,7 +220,7 @@ DynamicTemplate.prototype.renderView = function (template) {
   if (typeof template === 'string') {
     if (Blaze._getTemplate) {
       tmpl = Blaze._getTemplate(template, function () {
-        return Template.instance();
+        return self;
       });
     }
     else {
@@ -233,7 +233,7 @@ DynamicTemplate.prototype.renderView = function (template) {
       // a camelCase version of the template.
       if (Blaze._getTemplate) {
         tmpl = Blaze._getTemplate(camelCase(template), function () {
-          return Template.instance();
+          return self;
         });
       }
       else {
