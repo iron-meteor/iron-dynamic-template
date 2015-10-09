@@ -1,7 +1,7 @@
 Package.describe({
   name: 'iron:dynamic-template',
   summary: 'Dynamically create and update templates and their data contexts.',
-  version: '1.0.11',
+  version: '1.0.12',
   git: 'https://github.com/iron-meteor/iron-dynamic-template'
 });
 
