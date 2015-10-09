@@ -1,7 +1,8 @@
 Package.describe({
   summary: 'Dynamically create and update templates and their data contexts.',
   version: "1.0.0-pre3",
-  git: "https://github.com/eventedmind/iron-dynamic-template"
+  git: "https://github.com/eventedmind/iron-dynamic-template",
+  name: 'iron:dynamic-template'
 });
 
 Package.on_use(function (api) {
