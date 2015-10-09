@@ -2,6 +2,10 @@ v1.0.11 / 2015-10-09
 ==================
   * Support Meteor 1.2
 
+v1.0.7 / 2015-01-15
+==================
+  * fix event handler leak by detaching event handlers on destroyed views
+
 v0.4.0 / 2014-08-27
 ==================
   * Prepare for Blaze changes in 0.9.1

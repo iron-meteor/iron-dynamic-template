@@ -15,6 +15,7 @@ Package.on_use(function (api) {
   api.use('tracker');
   api.use('reactive-var');
   api.use('templating');
+  api.use('random');
 
   api.use('iron:core@1.0.11');
   api.imply('iron:core');
