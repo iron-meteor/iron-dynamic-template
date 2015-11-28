@@ -229,7 +229,7 @@ DynamicTemplate.prototype.renderView = function (template) {
       tmpl = Blaze.With({
         msg: "Couldn't find a template named " + JSON.stringify(template) + " or " + JSON.stringify(camelCase(template))+ ". Are you sure you defined it?"
       }, function () {
-        return Template.__DynamicTemplateError__;
+        return Template.__IronRouterDynamicTemplateError__;
       });
     }
   } else if (typeOf(template) === '[object Object]') {
