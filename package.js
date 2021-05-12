@@ -11,7 +11,7 @@ Package.on_use(function (api) {
   api.use('blaze');
   api.use('underscore');
   api.use('ui');
-  api.use('jquery');
+  api.use("jquery", { weak: true });
   api.use('tracker');
   api.use('reactive-var');
   api.use('templating');
