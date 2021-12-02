@@ -2,6 +2,13 @@ Iron.DynamicTemplate
 ===============================================================
 Dynamic templates and data contexts for Meteor.
 
+## Installation
+This package has a weak dependency on jQuery (similar as Blaze),
+so you can add jQuery to your Meteor app from a [CDN](https://code.jquery.com/) or a [Meteor package](https://atmospherejs.com/meteor/jquery):
+```
+meteor add jquery
+```
+
 ## Templates and Helpers
 
 ```html
